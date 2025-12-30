@@ -40,6 +40,9 @@ const IngredientsScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [deletingIngredientId, setDeletingIngredientId] = useState<string | null>(null);
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+    const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
     // Helper function to determine stock level based on quantity
     const getStockLevel = (quantity: number): 'high' | 'medium' | 'low' => {
@@ -273,6 +276,82 @@ const IngredientsScreen = () => {
         setEditingIngredient(null);
     };
 
+    // Selection mode handlers
+    const toggleSelectionMode = () => {
+        setIsSelectionMode(!isSelectionMode);
+        setSelectedIds(new Set()); // Clear selection when toggling
+    };
+
+    const toggleIngredientSelection = (id: string) => {
+        setSelectedIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(id)) {
+                newSet.delete(id);
+            } else {
+                newSet.add(id);
+            }
+            return newSet;
+        });
+    };
+
+    const selectAll = () => {
+        if (selectedIds.size === ingredients.length) {
+            setSelectedIds(new Set());
+        } else {
+            setSelectedIds(new Set(ingredients.map(ing => ing.id)));
+        }
+    };
+
+    const handleBulkDelete = async () => {
+        if (selectedIds.size === 0) {
+            Alert.alert('No Selection', 'Please select at least one ingredient to delete.');
+            return;
+        }
+
+        Alert.alert(
+            'Delete Ingredients',
+            `Are you sure you want to delete ${selectedIds.size} ingredient(s)?`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsBulkDeleting(true);
+                        try {
+                            const idsArray = Array.from(selectedIds);
+                            console.log('Bulk deleting ingredients:', idsArray);
+                            
+                            const response = await ingredientsService.bulkDeleteIngredients(idsArray);
+                            console.log('Bulk delete response:', response);
+                            
+                            // Clear selection and exit selection mode
+                            setSelectedIds(new Set());
+                            setIsSelectionMode(false);
+                            
+                            // Refresh ingredients list
+                            await fetchIngredients();
+                            
+                            Alert.alert('Success', `${response.deleted} ingredient(s) deleted successfully.`);
+                        } catch (err: any) {
+                            const apiError = err as ApiError;
+                            console.error('Error bulk deleting ingredients:', apiError);
+                            Alert.alert(
+                                'Error',
+                                apiError.message || 'Failed to delete ingredients. Please try again.'
+                            );
+                        } finally {
+                            setIsBulkDeleting(false);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     const handleUploadDoc = async () => {
         try {
             const result = await pick({
@@ -387,20 +466,25 @@ const IngredientsScreen = () => {
 
                     {/* Row 1: Add Ingredient & Upload Doc */}
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.brown }]} onPress={openModal}>
+                        <TouchableOpacity 
+                            style={[styles.addButton, { backgroundColor: colors.brown }]} 
+                            onPress={openModal}
+                            disabled={isSelectionMode}
+                        >
                             <Image source={icons.plus} style={[styles.buttonIcon, { tintColor: colors.white }]} />
                             <Text style={[styles.addButtonText, { color: colors.white }]}>Add Ingredient</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
                             style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}
                             onPress={handleUploadDoc}
+                            disabled={isSelectionMode}
                         >
                             <Ionicons name="cloud-upload-outline" size={wp(4)} color={colors.black} />
                             <Text style={[styles.filterButtonText, { color: colors.black }]}>Upload Doc</Text>
                         </TouchableOpacity>
                     </View>
 
-                    {/* Row 2: Export CSV & Import CSV */}
+                    {/* Row 2: Export CSV & Import CSV & Select Mode */}
                     <View style={styles.actionButtons}>
                         <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
                             <Image source={icons.export} style={[styles.buttonIcon, { tintColor: colors.black }]} />
@@ -411,6 +495,7 @@ const IngredientsScreen = () => {
                             <Text style={[styles.filterButtonText, { color: colors.black }]}>Import CSV</Text>
                         </TouchableOpacity>
                     </View>
+
                 </View>
 
                 {/* Metrics Section */}
@@ -426,6 +511,56 @@ const IngredientsScreen = () => {
                         />
                     ))}
                 </View>
+
+                {/* Selection Mode Controls - Above Ingredients List */}
+                {isSelectionMode && (
+                    <View style={styles.selectionControls}>
+                        <TouchableOpacity 
+                            style={[styles.selectAllButton, { backgroundColor: colors.brown }]}
+                            onPress={selectAll}
+                        >
+                            <Text style={[styles.selectAllText, { color: colors.white }]}>
+                                {selectedIds.size === ingredients.length ? 'Deselect All' : 'Select All'}
+                            </Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[styles.cancelSelectButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}
+                            onPress={toggleSelectionMode}
+                        >
+                            <Text style={[styles.cancelSelectText, { color: colors.black }]}>Cancel</Text>
+                        </TouchableOpacity>
+                    </View>
+                )}
+
+                {/* Select / Delete Button - Above Ingredients List */}
+                {ingredients.length > 1 && (
+                    !isSelectionMode ? (
+                        <TouchableOpacity 
+                            style={[styles.bulkDeleteButton, { backgroundColor: colors.brown }]}
+                            onPress={toggleSelectionMode}
+                        >
+                            <Ionicons name="checkbox-outline" size={wp(4)} color={colors.white} />
+                            <Text style={[styles.bulkDeleteText, { color: colors.white }]}>Select</Text>
+                        </TouchableOpacity>
+                    ) : selectedIds.size > 0 ? (
+                        <TouchableOpacity 
+                            style={[styles.bulkDeleteButton, { backgroundColor: colors.red }]}
+                            onPress={handleBulkDelete}
+                            disabled={isBulkDeleting}
+                        >
+                            {isBulkDeleting ? (
+                                <ActivityIndicator size="small" color={colors.white} />
+                            ) : (
+                                <>
+                                    <Ionicons name="trash-outline" size={wp(4)} color={colors.white} />
+                                    <Text style={[styles.bulkDeleteText, { color: colors.white }]}>
+                                        Delete ({selectedIds.size})
+                                    </Text>
+                                </>
+                            )}
+                        </TouchableOpacity>
+                    ) : null
+                )}
 
                 {/* Ingredients List */}
                 {isLoading ? (
@@ -453,10 +588,19 @@ const IngredientsScreen = () => {
                             <IngredientItem
                                 key={ingredient.id}
                                 ingredient={ingredient}
-                                onPress={() => handleIngredientPress(ingredient.id)}
+                                onPress={() => {
+                                    if (isSelectionMode) {
+                                        toggleIngredientSelection(ingredient.id);
+                                    } else {
+                                        handleIngredientPress(ingredient.id);
+                                    }
+                                }}
                                 onDelete={handleDeleteIngredient}
                                 onEdit={handleEditIngredient}
                                 isDeleting={deletingIngredientId === ingredient.id}
+                                isSelectionMode={isSelectionMode}
+                                isSelected={selectedIds.has(ingredient.id)}
+                                onToggleSelection={() => toggleIngredientSelection(ingredient.id)}
                             />
                         ))}
                     </View>
@@ -642,5 +786,50 @@ const styles = StyleSheet.create({
     emptyText: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
+    },
+    selectionControls: {
+        flexDirection: 'row',
+        gap: wp(3),
+        marginTop: hp(1),
+        marginBottom: hp(1),
+    },
+    selectAllButton: {
+        flex: 1,
+        height: hp(5),
+        borderRadius: wp(2),
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+    },
+    selectAllText: {
+        fontSize: wp(3.2),
+        fontFamily: FONT.medium,
+        marginLeft: wp(2),
+    },
+    cancelSelectButton: {
+        flex: 1,
+        height: hp(5),
+        borderWidth: 1,
+        borderRadius: wp(2),
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    cancelSelectText: {
+        fontSize: wp(3.2),
+        fontFamily: FONT.medium,
+    },
+    bulkDeleteButton: {
+        height: hp(5),
+        borderRadius: wp(2),
+        justifyContent: 'center',
+        alignItems: 'center',
+        flexDirection: 'row',
+        marginTop: hp(1),
+        marginBottom: hp(1),
+        gap: wp(2),
+    },
+    bulkDeleteText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.semiBold,
     },
 })

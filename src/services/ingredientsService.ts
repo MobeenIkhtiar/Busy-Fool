@@ -25,6 +25,14 @@ export interface UpdateIngredientRequest {
     supplier?: string;
 }
 
+export interface BulkDeleteRequest {
+    ids: (string | number)[];
+}
+
+export interface BulkDeleteResponse {
+    deleted: number;
+}
+
 export interface ApiError {
     message: string;
     status: number;
@@ -56,6 +64,19 @@ class IngredientsService {
             const response = await apiService.patch<Ingredient>(
                 `${API_CONFIG.ENDPOINTS.INGREDIENTS.LIST}/${id}`,
                 ingredientData
+            );
+            return response.data;
+        } catch (error: any) {
+            throw this.handleError(error);
+        }
+    }
+
+    // Bulk delete ingredients
+    async bulkDeleteIngredients(ids: (string | number)[]): Promise<BulkDeleteResponse> {
+        try {
+            const response = await apiService.post<BulkDeleteResponse>(
+                API_CONFIG.ENDPOINTS.INGREDIENTS.BULK_DELETE,
+                { ids }
             );
             return response.data;
         } catch (error: any) {

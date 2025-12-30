@@ -38,6 +38,7 @@ export const API_CONFIG = {
         },
         INGREDIENTS: {
             LIST: '/ingredients',
+            BULK_DELETE: '/ingredients/bulk-delete',
         },
     },
 

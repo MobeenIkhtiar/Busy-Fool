@@ -9,4 +9,4 @@ export { default as ingredientsService } from './ingredientsService';
 export type { LoginRequest, SignupRequest, AuthResponse, ApiError } from './authService';
 export type { User, UpdateUserRequest } from './userService';
 export type { FileUploadResponse } from './fileService';
-export type { Ingredient, UpdateIngredientRequest } from './ingredientsService'; 
+export type { Ingredient, UpdateIngredientRequest, BulkDeleteRequest, BulkDeleteResponse } from './ingredientsService'; 

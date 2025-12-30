@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } fr
 import { hp, wp, FONT } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 interface IngredientItemProps {
     ingredient: {
@@ -21,9 +22,21 @@ interface IngredientItemProps {
     onDelete?: (id: string) => void;
     onEdit?: (ingredient: IngredientItemProps['ingredient']) => void;
     isDeleting?: boolean;
+    isSelectionMode?: boolean;
+    isSelected?: boolean;
+    onToggleSelection?: () => void;
 }
 
-const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress, onDelete, onEdit, isDeleting = false }) => {
+const IngredientItem: React.FC<IngredientItemProps> = ({ 
+    ingredient, 
+    onPress, 
+    onDelete, 
+    onEdit, 
+    isDeleting = false,
+    isSelectionMode = false,
+    isSelected = false,
+    onToggleSelection
+}) => {
     const { colors, theme } = useTheme();
     
     // Card background: white in light mode, dark in dark mode
@@ -36,7 +49,7 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress, on
     };
 
     const handleEdit = () => {
-        if (onEdit) {
+        if (onEdit && !isSelectionMode) {
             onEdit(ingredient);
         }
     };
@@ -47,48 +60,67 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress, on
             {
                 backgroundColor: cardBg,
                 shadowColor: colors.black,
+                borderColor: isSelected ? colors.brown : 'transparent',
+                borderWidth: isSelected ? 2 : 0,
             }
         ]} onPress={onPress}>
             {/* Header Section with Name and Action Icons */}
             <View style={styles.header}>
+                {isSelectionMode && (
+                    <TouchableOpacity 
+                        style={styles.checkboxContainer}
+                        onPress={(e) => {
+                            e.stopPropagation();
+                            onToggleSelection?.();
+                        }}
+                    >
+                        <Ionicons 
+                            name={isSelected ? "checkbox" : "checkbox-outline"} 
+                            size={wp(6)} 
+                            color={isSelected ? colors.brown : colors.gray} 
+                        />
+                    </TouchableOpacity>
+                )}
                 <Text style={[styles.name, { color: colors.black }]}>{ingredient.name}</Text>
-                <View style={styles.actionIcons}>
-                    <TouchableOpacity 
-                        style={styles.iconButton}
-                        onPress={(e) => {
-                            e.stopPropagation(); // Prevent triggering parent onPress
-                            handleEdit();
-                        }}
-                    >
-                        <View style={styles.editIcon}>
-                            <Image
-                                source={icons.edit}
-                                style={styles.iconImage}
-                                tintColor={'#D97708'}
-                            />
-                        </View>
-                    </TouchableOpacity>
-                    <TouchableOpacity 
-                        style={[styles.iconButton, isDeleting && styles.iconButtonDisabled]}
-                        onPress={(e) => {
-                            e.stopPropagation(); // Prevent triggering parent onPress
-                            handleDelete();
-                        }}
-                        disabled={isDeleting}
-                    >
-                        <View style={styles.deleteIcon}>
-                            {isDeleting ? (
-                                <ActivityIndicator size="small" color="#DC2625" />
-                            ) : (
+                {!isSelectionMode && (
+                    <View style={styles.actionIcons}>
+                        <TouchableOpacity 
+                            style={styles.iconButton}
+                            onPress={(e) => {
+                                e.stopPropagation(); // Prevent triggering parent onPress
+                                handleEdit();
+                            }}
+                        >
+                            <View style={styles.editIcon}>
                                 <Image
-                                    source={icons.delete}
+                                    source={icons.edit}
                                     style={styles.iconImage}
-                                    tintColor={'#DC2625'}
+                                    tintColor={'#D97708'}
                                 />
-                            )}
-                        </View>
-                    </TouchableOpacity>
-                </View>
+                            </View>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[styles.iconButton, isDeleting && styles.iconButtonDisabled]}
+                            onPress={(e) => {
+                                e.stopPropagation(); // Prevent triggering parent onPress
+                                handleDelete();
+                            }}
+                            disabled={isDeleting}
+                        >
+                            <View style={styles.deleteIcon}>
+                                {isDeleting ? (
+                                    <ActivityIndicator size="small" color="#DC2625" />
+                                ) : (
+                                    <Image
+                                        source={icons.delete}
+                                        style={styles.iconImage}
+                                        tintColor={'#DC2625'}
+                                    />
+                                )}
+                            </View>
+                        </TouchableOpacity>
+                    </View>
+                )}
             </View>
 
             {/* Category Tag */}
@@ -159,6 +191,11 @@ const styles = StyleSheet.create({
         fontFamily: FONT.bold,
         flex: 1,
         marginRight: wp(2),
+        marginLeft: wp(2),
+    },
+    checkboxContainer: {
+        padding: wp(1),
+        marginRight: wp(1),
     },
     actionIcons: {
         flexDirection: 'row',
