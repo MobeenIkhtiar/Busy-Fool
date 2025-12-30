@@ -108,6 +108,18 @@ class AuthService {
         }
     }
 
+    // Get user profile (for auto-login check on app refresh)
+    async getProfile(): Promise<any> {
+        try {
+            const response = await apiService.get(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
+            console.log('GetProfile response:', response);
+            return response.data;
+        } catch (error: any) {
+            console.error('Error getting profile:', error);
+            throw this.handleError(error);
+        }
+    }
+
     // Change password
     async changePassword(currentPassword: string, newPassword: string): Promise<void> {
         try {

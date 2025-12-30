@@ -25,6 +25,7 @@ export const API_CONFIG = {
             RESET_PASSWORD: '/auth/reset-password',
             CHANGE_PASSWORD: '/auth/change-password',
             ME: '/auth/me',
+            PROFILE: '/auth/profile',
         },
         USER: {
             PROFILE: '/user/profile',
