@@ -36,6 +36,9 @@ export const API_CONFIG = {
         MINDEE: {
             UPLOAD: '/mindee/upload',
         },
+        INGREDIENTS: {
+            LIST: '/ingredients',
+        },
     },
 
     // Storage keys

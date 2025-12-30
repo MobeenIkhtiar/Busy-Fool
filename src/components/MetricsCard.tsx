@@ -12,7 +12,7 @@ interface MetricCardProps {
     iconBackground?: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor, iconBackground }) => {
+const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor }) => {
     const { colors, theme } = useTheme();
     
     // Card background: white in light mode, dark in dark mode
@@ -20,7 +20,6 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor, 
     
     // Default icon colors if not provided
     const defaultIconColor = iconColor || colors.brown;
-    const defaultIconBackground = iconBackground || colors.lightgray;
     
     // Text colors: black in light mode, white/light gray in dark mode
     const labelColor = theme === 'light' ? colors.gray : colors.gray;
@@ -35,22 +34,11 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor, 
                 borderColor: colors.lightWhite,
             }
         ]}>
-            {iconBackground && (
-                <View style={[styles.iconContainer, { backgroundColor: defaultIconBackground }]}>
-                    <Image
-                        source={icon}
-                        style={[styles.icon, { tintColor: defaultIconColor }]}
-                        resizeMode="contain"
-                    />
-                </View>
-            )}
-            {!iconBackground && (
-                <Image
-                    source={icon}
-                    style={[styles.icon, { tintColor: defaultIconColor }]}
-                    resizeMode="contain"
-                />
-            )}
+            <Image
+                source={icon}
+                style={[styles.icon, { tintColor: defaultIconColor }]}
+                resizeMode="contain"
+            />
             <View style={styles.content}>
                 <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
                 <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
@@ -76,17 +64,9 @@ const styles = StyleSheet.create({
         elevation: 5,
         marginHorizontal: wp(1),
     },
-    iconContainer: {
-        width: wp(12),
-        height: wp(12),
-        borderRadius: wp(6),
-        justifyContent: 'center',
-        alignItems: 'center',
-        marginRight: wp(3),
-    },
     icon: {
-        width: wp(5),
-        height: wp(5),
+        width: wp(6),
+        height: wp(6),
         marginRight: wp(3),
     },
     content: {

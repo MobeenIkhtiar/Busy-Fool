@@ -1,5 +1,5 @@
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Platform, ActivityIndicator, Modal } from 'react-native'
-import React, { useState } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { icons } from '../../../constants/icons'
 import { FONT, hp, wp } from '../../../constants/StyleGuide'
 import { useTheme } from '../../../context/ThemeContext'
@@ -7,78 +7,122 @@ import TopBar from '../../../components/TopBar'
 import IngredientItem from '../../../components/IngredientItem'
 import MetricCard from '../../../components/MetricsCard'
 import AddIngredientModal from '../../../components/AddIngredientModal'
-import { useNavigation } from '@react-navigation/native'
+import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { pick } from '@react-native-documents/picker'
-import { fileService, ApiError } from '../../../services'
+import { fileService, ingredientsService, ApiError, Ingredient } from '../../../services'
+
+// Type for component's ingredient format
+interface ComponentIngredient {
+    id: string;
+    name: string;
+    category: string;
+    quantity: number;
+    unit: string;
+    cost: number;
+    stockLevel: 'high' | 'medium' | 'low';
+    lastUpdated: string;
+    waste: number;
+    supplier: string;
+}
 
 const IngredientsScreen = () => {
     const navigation = useNavigation();
     const { colors, theme } = useTheme();
-    // Sample ingredient data
-    const sampleIngredients = [
-        {
-            id: '1',
-            name: 'Coffee Beans (Arabica)',
-            category: 'Coffee',
-            quantity: 12,
-            unit: 'kg',
-            cost: 25.7300,
-            stockLevel: 'high' as const,
-            lastUpdated: '2 hours ago',
-            waste: 5,
-            supplier: 'Coffee Roasters Ltd'
-        },
-        {
-            id: '2',
-            name: 'Whole Milk',
-            category: 'Dairy',
-            quantity: 8,
-            unit: 'L',
-            cost: 12.80,
-            stockLevel: 'medium' as const,
-            lastUpdated: '1 day ago',
-            waste: 3,
-            supplier: 'Fresh Dairy Co.'
-        },
-        {
-            id: '3',
-            name: 'Vanilla Syrup',
-            category: 'Flavoring',
-            quantity: 2,
-            unit: 'L',
-            cost: 18.90,
-            stockLevel: 'low' as const,
-            lastUpdated: '3 days ago',
-            waste: 8,
-            supplier: 'Flavor Masters'
-        },
-        {
-            id: '4',
-            name: 'Sugar',
-            category: 'Sweetener',
-            quantity: 15,
-            unit: 'kg',
-            cost: 8.50,
-            stockLevel: 'high' as const,
-            lastUpdated: '5 hours ago',
-            waste: 2,
-            supplier: 'Sweet Supply Co.'
-        }
-    ];
 
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const [ingredients, setIngredients] = useState(sampleIngredients);
+    const [ingredients, setIngredients] = useState<ComponentIngredient[]>([]);
     const [isUploading, setIsUploading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [deletingIngredientId, setDeletingIngredientId] = useState<string | null>(null);
+
+    // Helper function to determine stock level based on quantity
+    const getStockLevel = (quantity: number): 'high' | 'medium' | 'low' => {
+        if (quantity >= 10) return 'high';
+        if (quantity >= 5) return 'medium';
+        return 'low';
+    };
+
+    // Helper function to map API ingredient to component format
+    const mapApiIngredientToComponent = (apiIngredient: Ingredient): ComponentIngredient => {
+        // Parse string values to numbers
+        const quantity = typeof apiIngredient.quantity === 'string' 
+            ? parseFloat(apiIngredient.quantity) || 0 
+            : apiIngredient.quantity;
+        
+        const purchasePrice = typeof apiIngredient.purchase_price === 'string' 
+            ? parseFloat(apiIngredient.purchase_price) || 0 
+            : apiIngredient.purchase_price;
+        
+        const wastePercent = typeof apiIngredient.waste_percent === 'string' 
+            ? parseFloat(apiIngredient.waste_percent) || 0 
+            : apiIngredient.waste_percent;
+
+        return {
+            id: apiIngredient.id.toString(),
+            name: apiIngredient.name,
+            category: 'General', // Default category, can be enhanced if API provides it
+            quantity: quantity,
+            unit: apiIngredient.unit,
+            cost: purchasePrice,
+            stockLevel: getStockLevel(quantity),
+            lastUpdated: 'Recently', // Default, can be enhanced if API provides timestamp
+            waste: wastePercent,
+            supplier: apiIngredient.supplier || 'Unknown'
+        };
+    };
+
+    // Fetch ingredients from API
+    const fetchIngredients = async () => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            console.log('Fetching ingredients from API...');
+            const apiIngredients = await ingredientsService.getIngredients();
+            console.log('Ingredients fetched successfully:', apiIngredients);
+            
+            // Map API response to component format
+            const mappedIngredients = apiIngredients.map(mapApiIngredientToComponent);
+            setIngredients(mappedIngredients);
+        } catch (err: any) {
+            const apiError = err as ApiError;
+            console.error('Error fetching ingredients:', apiError);
+            setError(apiError.message || 'Failed to fetch ingredients. Please try again.');
+            
+            // Show error alert
+            Alert.alert(
+                'Error',
+                apiError.message || 'Failed to fetch ingredients. Please try again.',
+                [{ text: 'OK' }]
+            );
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // Fetch ingredients on component mount
+    useEffect(() => {
+        fetchIngredients();
+    }, []);
+
+    // Refresh ingredients when screen comes into focus
+    useFocusEffect(
+        useCallback(() => {
+            fetchIngredients();
+        }, [])
+    );
 
     // Calculate metrics based on current ingredients
     const calculateMetrics = () => {
         const totalIngredients = ingredients.length;
         const lowStockCount = ingredients.filter(ing => ing.stockLevel === 'low').length;
         const avgWaste = ingredients.length > 0
-            ? (ingredients.reduce((sum, ing) => sum + ing.waste, 0) / ingredients.length).toFixed(1)
+            ? (ingredients.reduce((sum, ing) => sum + (ing.waste || 0), 0) / ingredients.length).toFixed(1)
             : '0.0';
-        const totalValue = ingredients.reduce((sum, ing) => sum + ing.cost, 0).toFixed(0);
+        const totalValue = ingredients.length > 0
+            ? ingredients.reduce((sum, ing) => sum + (ing.cost || 0), 0).toFixed(2)
+            : '0.00';
 
         return [
             {
@@ -87,7 +131,7 @@ const IngredientsScreen = () => {
                 label: 'Total Ingredients',
                 value: totalIngredients.toString(),
                 iconColor: '#10B981',
-                iconBackground: '#D1FAE5'
+                iconBackground: ''
             },
             {
                 id: '2',
@@ -95,7 +139,7 @@ const IngredientsScreen = () => {
                 label: 'Low Stock',
                 value: lowStockCount.toString(),
                 iconColor: '#EF4444',
-                iconBackground: '#FEE2E2'
+                iconBackground: ''
             },
             {
                 id: '3',
@@ -123,28 +167,57 @@ const IngredientsScreen = () => {
         // Add navigation or action logic here
     };
 
+    const handleDeleteIngredient = async (ingredientId: string) => {
+        Alert.alert(
+            'Delete Ingredient',
+            'Are you sure you want to delete this ingredient?',
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setDeletingIngredientId(ingredientId);
+                        try {
+                            console.log('Deleting ingredient:', ingredientId);
+                            await ingredientsService.deleteIngredient(ingredientId);
+                            console.log('Ingredient deleted successfully');
+                            
+                            // Refresh the ingredients list
+                            await fetchIngredients();
+                            
+                            // Show success message
+                            Alert.alert('Success', 'Ingredient deleted successfully.');
+                        } catch (err: any) {
+                            const apiError = err as ApiError;
+                            console.error('Error deleting ingredient:', apiError);
+                            Alert.alert(
+                                'Error',
+                                apiError.message || 'Failed to delete ingredient. Please try again.'
+                            );
+                        } finally {
+                            setDeletingIngredientId(null);
+                        }
+                    },
+                },
+            ]
+        );
+    };
+
     const handleAddIngredient = (formData: any) => {
         console.log('New ingredient data:', formData);
 
-        // Create new ingredient object
-        const newIngredient = {
-            id: Date.now().toString(), // Generate unique ID
-            name: formData.name,
-            category: formData.category,
-            quantity: parseFloat(formData.currentStockLevel) || 0,
-            unit: formData.unit || 'kg',
-            cost: parseFloat(formData.purchasePrice),
-            stockLevel: 'high' as const, // Default to high stock
-            lastUpdated: 'Just now',
-            waste: parseFloat(formData.wastePercentage) || 5,
-            supplier: formData.supplier || 'Unknown'
-        };
-
-        // Add to ingredients list
-        setIngredients(prevIngredients => [newIngredient, ...prevIngredients]);
-
-        // Success message could be shown with a toast or inline message
-        console.log('Ingredient added successfully!');
+        // Note: In a real app, you would call an API to add the ingredient
+        // For now, we'll refresh the list to get the latest data from the server
+        // This ensures consistency with the backend data
+        
+        // Refresh ingredients list after adding
+        fetchIngredients();
+        
+        console.log('Ingredient added successfully! List refreshed.');
     };
 
     const openModal = () => setIsModalVisible(true);
@@ -230,7 +303,15 @@ const IngredientsScreen = () => {
                 `Files processed: ${summary.successfullyProcessed}/${summary.totalFiles}\n` +
                 `Ingredients created: ${summary.ingredientsCreated}\n` +
                 `Ingredients updated: ${summary.ingredientsUpdated}`,
-                [{ text: 'OK' }]
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => {
+                            // Refresh ingredients list after successful upload
+                            fetchIngredients();
+                        }
+                    }
+                ]
             );
         } catch (error: any) {
             const apiError = error as ApiError;
@@ -297,15 +378,38 @@ const IngredientsScreen = () => {
                 </View>
 
                 {/* Ingredients List */}
-                <View style={styles.ingredientsList}>
-                    {ingredients.map((ingredient) => (
-                        <IngredientItem
-                            key={ingredient.id}
-                            ingredient={ingredient}
-                            onPress={() => handleIngredientPress(ingredient.id)}
-                        />
-                    ))}
-                </View>
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color={colors.brown} />
+                        <Text style={[styles.loadingText, { color: colors.gray }]}>Loading ingredients...</Text>
+                    </View>
+                ) : error ? (
+                    <View style={styles.errorContainer}>
+                        <Text style={[styles.errorText, { color: colors.red }]}>{error}</Text>
+                        <TouchableOpacity
+                            style={[styles.retryButton, { backgroundColor: colors.brown }]}
+                            onPress={fetchIngredients}
+                        >
+                            <Text style={[styles.retryButtonText, { color: colors.white }]}>Retry</Text>
+                        </TouchableOpacity>
+                    </View>
+                ) : ingredients.length === 0 ? (
+                    <View style={styles.emptyContainer}>
+                        <Text style={[styles.emptyText, { color: colors.gray }]}>No ingredients found</Text>
+                    </View>
+                ) : (
+                    <View style={styles.ingredientsList}>
+                        {ingredients.map((ingredient) => (
+                            <IngredientItem
+                                key={ingredient.id}
+                                ingredient={ingredient}
+                                onPress={() => handleIngredientPress(ingredient.id)}
+                                onDelete={handleDeleteIngredient}
+                                isDeleting={deletingIngredientId === ingredient.id}
+                            />
+                        ))}
+                    </View>
+                )}
             </ScrollView>
 
             {/* Add Ingredient Modal */}
@@ -428,5 +532,48 @@ const styles = StyleSheet.create({
         fontSize: wp(3),
         fontFamily: FONT.regular,
         marginTop: hp(0.5),
+    },
+    loadingContainer: {
+        padding: wp(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: hp(20),
+    },
+    loadingText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
+        marginTop: hp(2),
+    },
+    errorContainer: {
+        padding: wp(6),
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: hp(15),
+    },
+    errorText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
+        textAlign: 'center',
+        marginBottom: hp(2),
+    },
+    retryButton: {
+        paddingHorizontal: wp(6),
+        paddingVertical: hp(1.5),
+        borderRadius: wp(2),
+        marginTop: hp(1),
+    },
+    retryButtonText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.semiBold,
+    },
+    emptyContainer: {
+        padding: wp(8),
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: hp(15),
+    },
+    emptyText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
     },
 })
