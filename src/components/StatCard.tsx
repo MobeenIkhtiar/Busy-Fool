@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import * as Animatable from 'react-native-animatable';
+import { Text, View, StyleSheet } from 'react-native';
 import { FONT, hp, wp } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import ProgressBar from './ProgressBar';
@@ -16,10 +15,8 @@ type StatCardProps = {
 const StatCard: React.FC<StatCardProps> = ({ label, value, color, valueColor, progress }) => {
     const { colors, theme } = useTheme();
     const [animatedProgress, setAnimatedProgress] = useState(0);
-    const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        setIsVisible(true);
         const timer = setTimeout(() => {
             setAnimatedProgress(progress);
         }, 500);
@@ -30,22 +27,15 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, color, valueColor, pr
     const cardBackgroundColor = theme === 'light' ? colors.white : colors.primary;
 
     return (
-        <Animatable.View
-            animation={isVisible ? "fadeIn" : undefined}
-            duration={600}
+        <View
             style={[styles.card, { backgroundColor: cardBackgroundColor, shadowColor: colors.black }]}
         >
             <Text style={[styles.cardLabel, { color: colors.gray }]}>{label}</Text>
-            <Animatable.Text
-                animation={isVisible ? "zoomIn" : undefined}
-                duration={800}
-                delay={200}
-                style={[styles.cardValue, { color: valueColor }]}
-            >
+            <Text style={[styles.cardValue, { color: valueColor }]}>
                 {value}
-            </Animatable.Text>
+            </Text>
             <ProgressBar progress={animatedProgress} color={color} />
-        </Animatable.View>
+        </View>
     );
 };
 

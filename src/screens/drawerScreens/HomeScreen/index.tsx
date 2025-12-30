@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-native';
 import * as Animatable from 'react-native-animatable';
 import { FONT, wp, hp } from '../../../constants/StyleGuide';
 import { useTheme } from '../../../context/ThemeContext';
@@ -33,11 +33,33 @@ const HomeScreen = () => {
     const { colors } = useTheme();
     const [activeTab, setActiveTab] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isStatsLoading, setIsStatsLoading] = useState(true);
 
     useEffect(() => {
         // Trigger animations after component mounts
         const timer = setTimeout(() => setIsLoaded(true), 100);
         return () => clearTimeout(timer);
+    }, []);
+
+    useEffect(() => {
+        // Simulate API call - replace this with actual API call in future
+        const fetchStats = async () => {
+            try {
+                // TODO: Replace with actual API call
+                // const stats = await statsService.getStats();
+                
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Set stats data here when API is ready
+                setIsStatsLoading(false);
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                setIsStatsLoading(false);
+            }
+        };
+
+        fetchStats();
     }, []);
 
     return (
@@ -57,34 +79,27 @@ const HomeScreen = () => {
                     <Text style={[styles.subtitle, { color: colors.gray }]}>Here's a quick glance at your coffee business today.</Text>
                 </Animatable.View>
 
-                <Animatable.View
-                    animation={isLoaded ? "fadeInUp" : undefined}
-                    duration={1000}
-                    delay={400}
-                    style={styles.statsSection}
-                >
+                {isLoaded && (
                     <Animatable.View
-                        animation={isLoaded ? "slideInLeft" : undefined}
-                        duration={600}
-                        delay={600}
+                        animation="fadeInUp"
+                        duration={800}
+                        delay={400}
+                        style={styles.statsSection}
                     >
-                        <StatCard label="Revenue" value="£1243" color={colors.brown} valueColor={colors.brown} progress={0.8} />
+                        {isStatsLoading ? (
+                            <View style={[styles.loaderContainer, { backgroundColor: colors.primary }]}>
+                                <ActivityIndicator size="large" color={colors.brown} />
+                                <Text style={[styles.loaderText, { color: colors.gray }]}>Loading stats...</Text>
+                            </View>
+                        ) : (
+                            <>
+                                <StatCard label="Revenue" value="£1243" color={colors.brown} valueColor={colors.brown} progress={0.8} />
+                                <StatCard label="Cost" value="£872" color={colors.orange} valueColor={colors.orange} progress={0.6} />
+                                <StatCard label="Profit" value="£371" color={colors.green} valueColor={colors.green} progress={0.3} />
+                            </>
+                        )}
                     </Animatable.View>
-                    <Animatable.View
-                        animation={isLoaded ? "slideInLeft" : undefined}
-                        duration={600}
-                        delay={800}
-                    >
-                        <StatCard label="Cost" value="£872" color={colors.orange} valueColor={colors.orange} progress={0.6} />
-                    </Animatable.View>
-                    <Animatable.View
-                        animation={isLoaded ? "slideInLeft" : undefined}
-                        duration={600}
-                        delay={1000}
-                    >
-                        <StatCard label="Profit" value="£371" color={colors.green} valueColor={colors.green} progress={0.3} />
-                    </Animatable.View>
-                </Animatable.View>
+                )}
 
                 <Animatable.View
                     animation={isLoaded ? "zoomIn" : undefined}
@@ -170,5 +185,19 @@ const styles = StyleSheet.create({
         fontSize: wp(4.5),
         marginBottom: hp(1),
         marginTop: hp(1)
+    },
+    loaderContainer: {
+        borderRadius: wp(2),
+        padding: wp(8),
+        marginBottom: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: hp(15),
+        marginHorizontal: wp(1),
+    },
+    loaderText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
+        marginTop: hp(2),
     },
 });
