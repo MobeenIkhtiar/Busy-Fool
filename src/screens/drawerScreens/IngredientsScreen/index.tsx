@@ -1,4 +1,4 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Platform } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Platform, ActivityIndicator, Modal } from 'react-native'
 import React, { useState } from 'react'
 import { icons } from '../../../constants/icons'
 import { FONT, hp, wp } from '../../../constants/StyleGuide'
@@ -69,6 +69,7 @@ const IngredientsScreen = () => {
 
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [ingredients, setIngredients] = useState(sampleIngredients);
+    const [isUploading, setIsUploading] = useState(false);
 
     // Calculate metrics based on current ingredients
     const calculateMetrics = () => {
@@ -208,6 +209,8 @@ const IngredientsScreen = () => {
             uri: file.uri,
         });
         
+        setIsUploading(true);
+        
         try {
             // Call the API to upload the file
             // Pass file object with uri, name, and type
@@ -233,6 +236,8 @@ const IngredientsScreen = () => {
             const apiError = error as ApiError;
             console.error('File upload error:', apiError);
             Alert.alert('Error', apiError.message || 'Failed to upload file. Please try again.');
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -309,6 +314,21 @@ const IngredientsScreen = () => {
                 onClose={closeModal}
                 onSubmit={handleAddIngredient}
             />
+
+            {/* Upload Loading Modal */}
+            <Modal
+                visible={isUploading}
+                transparent={true}
+                animationType="fade"
+            >
+                <View style={styles.loaderOverlay}>
+                    <View style={[styles.loaderContainer, { backgroundColor: colors.primary }]}>
+                        <ActivityIndicator size="large" color={colors.brown} />
+                        <Text style={[styles.loaderText, { color: colors.black }]}>Uploading file...</Text>
+                        <Text style={[styles.loaderSubtext, { color: colors.gray }]}>Please wait</Text>
+                    </View>
+                </View>
+            </Modal>
         </View>
     )
 }
@@ -378,5 +398,35 @@ const styles = StyleSheet.create({
     },
     ingredientsList: {
         marginTop: hp(2),
+    },
+    loaderOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    loaderContainer: {
+        borderRadius: wp(3),
+        padding: wp(6),
+        alignItems: 'center',
+        minWidth: wp(60),
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    loaderText: {
+        fontSize: wp(4),
+        fontFamily: FONT.semiBold,
+        marginTop: hp(2),
+    },
+    loaderSubtext: {
+        fontSize: wp(3),
+        fontFamily: FONT.regular,
+        marginTop: hp(0.5),
     },
 })
