@@ -7,10 +7,11 @@ import TopBar from '../../../components/TopBar'
 import IngredientItem from '../../../components/IngredientItem'
 import MetricCard from '../../../components/MetricsCard'
 import AddIngredientModal from '../../../components/AddIngredientModal'
+import EditIngredientModal from '../../../components/EditIngredientModal'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { pick } from '@react-native-documents/picker'
-import { fileService, ingredientsService, ApiError, Ingredient } from '../../../services'
+import { fileService, ingredientsService, ApiError, Ingredient, UpdateIngredientRequest } from '../../../services'
 
 // Type for component's ingredient format
 interface ComponentIngredient {
@@ -22,8 +23,8 @@ interface ComponentIngredient {
     cost: number;
     stockLevel: 'high' | 'medium' | 'low';
     lastUpdated: string;
-    waste: number;
-    supplier: string;
+    waste?: number;
+    supplier?: string;
 }
 
 const IngredientsScreen = () => {
@@ -31,6 +32,9 @@ const IngredientsScreen = () => {
     const { colors, theme } = useTheme();
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [isEditModalVisible, setIsEditModalVisible] = useState(false);
+    const [editingIngredient, setEditingIngredient] = useState<ComponentIngredient | null>(null);
+    const [isUpdating, setIsUpdating] = useState(false);
     const [ingredients, setIngredients] = useState<ComponentIngredient[]>([]);
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
@@ -220,8 +224,54 @@ const IngredientsScreen = () => {
         console.log('Ingredient added successfully! List refreshed.');
     };
 
+    const handleEditIngredient = (ingredient: ComponentIngredient) => {
+        setEditingIngredient(ingredient);
+        setIsEditModalVisible(true);
+    };
+
+    const handleUpdateIngredient = async (formData: any) => {
+        if (!editingIngredient) return;
+
+        setIsUpdating(true);
+        try {
+            console.log('Updating ingredient:', editingIngredient.id, formData);
+            
+            const updateData: UpdateIngredientRequest = {
+                name: formData.name,
+                unit: formData.unit,
+                quantity: parseFloat(formData.quantity),
+                purchase_price: parseFloat(formData.purchase_price),
+                waste_percent: parseFloat(formData.waste_percent),
+                supplier: formData.supplier,
+            };
+
+            await ingredientsService.updateIngredient(editingIngredient.id, updateData);
+            console.log('Ingredient updated successfully');
+            
+            // Close modal and refresh list
+            setIsEditModalVisible(false);
+            setEditingIngredient(null);
+            await fetchIngredients();
+            
+            Alert.alert('Success', 'Ingredient updated successfully.');
+        } catch (err: any) {
+            const apiError = err as ApiError;
+            console.error('Error updating ingredient:', apiError);
+            Alert.alert(
+                'Error',
+                apiError.message || 'Failed to update ingredient. Please try again.'
+            );
+        } finally {
+            setIsUpdating(false);
+        }
+    };
+
     const openModal = () => setIsModalVisible(true);
     const closeModal = () => setIsModalVisible(false);
+    const closeEditModal = () => {
+        setIsEditModalVisible(false);
+        setEditingIngredient(null);
+    };
 
     const handleUploadDoc = async () => {
         try {
@@ -405,6 +455,7 @@ const IngredientsScreen = () => {
                                 ingredient={ingredient}
                                 onPress={() => handleIngredientPress(ingredient.id)}
                                 onDelete={handleDeleteIngredient}
+                                onEdit={handleEditIngredient}
                                 isDeleting={deletingIngredientId === ingredient.id}
                             />
                         ))}
@@ -417,6 +468,22 @@ const IngredientsScreen = () => {
                 visible={isModalVisible}
                 onClose={closeModal}
                 onSubmit={handleAddIngredient}
+            />
+
+            {/* Edit Ingredient Modal */}
+            <EditIngredientModal
+                visible={isEditModalVisible}
+                onClose={closeEditModal}
+                onSubmit={handleUpdateIngredient}
+                ingredient={editingIngredient ? {
+                    id: editingIngredient.id,
+                    name: editingIngredient.name,
+                    unit: editingIngredient.unit,
+                    quantity: editingIngredient.quantity,
+                    cost: editingIngredient.cost,
+                    waste: editingIngredient.waste,
+                    supplier: editingIngredient.supplier,
+                } : null}
             />
 
             {/* Upload Loading Modal */}

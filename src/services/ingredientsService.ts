@@ -16,6 +16,15 @@ export interface Ingredient {
     created_at?: string; // Optional timestamp
 }
 
+export interface UpdateIngredientRequest {
+    name?: string;
+    unit?: string;
+    quantity?: number;
+    purchase_price?: number;
+    waste_percent?: number;
+    supplier?: string;
+}
+
 export interface ApiError {
     message: string;
     status: number;
@@ -36,6 +45,19 @@ class IngredientsService {
     async deleteIngredient(id: string | number): Promise<void> {
         try {
             await apiService.delete(`${API_CONFIG.ENDPOINTS.INGREDIENTS.LIST}/${id}`);
+        } catch (error: any) {
+            throw this.handleError(error);
+        }
+    }
+
+    // Update ingredient by ID
+    async updateIngredient(id: string | number, ingredientData: UpdateIngredientRequest): Promise<Ingredient> {
+        try {
+            const response = await apiService.patch<Ingredient>(
+                `${API_CONFIG.ENDPOINTS.INGREDIENTS.LIST}/${id}`,
+                ingredientData
+            );
+            return response.data;
         } catch (error: any) {
             throw this.handleError(error);
         }

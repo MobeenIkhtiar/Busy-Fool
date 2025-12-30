@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, ActivityIndicator } from 'react-native';
 import { hp, wp, FONT } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
@@ -18,13 +18,28 @@ interface IngredientItemProps {
         supplier?: string;
     };
     onPress?: () => void;
+    onDelete?: (id: string) => void;
+    onEdit?: (ingredient: IngredientItemProps['ingredient']) => void;
+    isDeleting?: boolean;
 }
 
-const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) => {
+const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress, onDelete, onEdit, isDeleting = false }) => {
     const { colors, theme } = useTheme();
     
     // Card background: white in light mode, dark in dark mode
     const cardBg = theme === 'light' ? colors.white : colors.primary;
+
+    const handleDelete = () => {
+        if (onDelete && !isDeleting) {
+            onDelete(ingredient.id);
+        }
+    };
+
+    const handleEdit = () => {
+        if (onEdit) {
+            onEdit(ingredient);
+        }
+    };
 
     return (
         <TouchableOpacity style={[
@@ -38,7 +53,13 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) 
             <View style={styles.header}>
                 <Text style={[styles.name, { color: colors.black }]}>{ingredient.name}</Text>
                 <View style={styles.actionIcons}>
-                    <TouchableOpacity style={styles.iconButton}>
+                    <TouchableOpacity 
+                        style={styles.iconButton}
+                        onPress={(e) => {
+                            e.stopPropagation(); // Prevent triggering parent onPress
+                            handleEdit();
+                        }}
+                    >
                         <View style={styles.editIcon}>
                             <Image
                                 source={icons.edit}
@@ -47,13 +68,24 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) 
                             />
                         </View>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.iconButton}>
+                    <TouchableOpacity 
+                        style={[styles.iconButton, isDeleting && styles.iconButtonDisabled]}
+                        onPress={(e) => {
+                            e.stopPropagation(); // Prevent triggering parent onPress
+                            handleDelete();
+                        }}
+                        disabled={isDeleting}
+                    >
                         <View style={styles.deleteIcon}>
-                            <Image
-                                source={icons.delete}
-                                style={styles.iconImage}
-                                tintColor={'#DC2625'}
-                            />
+                            {isDeleting ? (
+                                <ActivityIndicator size="small" color="#DC2625" />
+                            ) : (
+                                <Image
+                                    source={icons.delete}
+                                    style={styles.iconImage}
+                                    tintColor={'#DC2625'}
+                                />
+                            )}
                         </View>
                     </TouchableOpacity>
                 </View>
@@ -134,6 +166,9 @@ const styles = StyleSheet.create({
     },
     iconButton: {
         padding: wp(1),
+    },
+    iconButtonDisabled: {
+        opacity: 0.5,
     },
     editIcon: {
         width: wp(5),
