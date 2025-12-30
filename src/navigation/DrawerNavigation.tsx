@@ -5,6 +5,7 @@ import CustomDrawer from '../components/CustomDrawer';
 import ProductScreen from '../screens/drawerScreens/ProductScreen';
 import IngredientsScreen from '../screens/drawerScreens/IngredientsScreen';
 import AnalyticsScreen from '../screens/drawerScreens/AnalyticsScreen';
+import { wp } from '../constants/StyleGuide';
 
 const Drawer = createDrawerNavigator();
 
@@ -15,6 +16,9 @@ const DrawerNavigator = () => (
             headerShown: false,
             drawerType: 'front',
             overlayColor: 'transparent',
+            drawerStyle: {
+                width: wp(70), // 70% of screen width (reduced from default ~80%)
+            },
         }}
     >
         <Drawer.Screen name="Dashboard" component={HomeScreen} />

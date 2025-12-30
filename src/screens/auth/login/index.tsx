@@ -4,7 +4,8 @@ import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomInput from '../../../components/CustomInput';
 import CustomButton from '../../../components/CustomButton';
-import { COLORS, FONT, wp, hp } from '../../../constants/StyleGuide';
+import { FONT, wp, hp } from '../../../constants/StyleGuide';
+import { useTheme } from '../../../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { authService, ApiError } from '../../../services';
@@ -19,6 +20,7 @@ type RootStackParamList = {
 
 const Login: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const { colors } = useTheme();
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -43,12 +45,12 @@ const Login: React.FC = () => {
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: COLORS.primary }}
+            style={{ flex: 1, backgroundColor: colors.primary }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
                 <LinearGradient
-                    colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+                    colors={colors.gradientColors}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
                     style={styles.gradient}
@@ -58,13 +60,13 @@ const Login: React.FC = () => {
                         duration={900}
                         style={styles.header}
                     >
-                        <Text style={styles.welcome}>Welcome back</Text>
-                        <Animatable.Text animation="bounceIn" delay={300} style={styles.wave}>👋</Animatable.Text>
-                        <Text style={styles.subtitle}>Let's get back to making your{`\n`}menu more profitable.</Text>
-                        <Text style={styles.accountText}>Don't have an account?</Text>
-                        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                            <Text style={styles.createAccount}>Create one now</Text>
-                        </TouchableOpacity>
+                    <Text style={[styles.welcome, { color: colors.white }]}>Welcome back</Text>
+                    <Animatable.Text animation="bounceIn" delay={300} style={styles.wave}>👋</Animatable.Text>
+                    <Text style={[styles.subtitle, { color: colors.white }]}>Let's get back to making your{`\n`}menu more profitable.</Text>
+                    <Text style={[styles.accountText, { color: colors.lightWhite }]}>Don't have an account?</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                        <Text style={[styles.createAccount, { color: colors.white }]}>Create one now</Text>
+                    </TouchableOpacity>
                     </Animatable.View>
                 </LinearGradient>
 
@@ -73,7 +75,7 @@ const Login: React.FC = () => {
                     delay={400}
                     style={styles.formContainer}
                 >
-                    <Text style={styles.loginTitle}>Log in to Busy Fool</Text>
+                    <Text style={[styles.loginTitle, { color: colors.brown }]}>Log in to Busy Fool</Text>
                     <CustomInput
                         label="Email"
                         placeholder="Enter your email"
@@ -119,7 +121,6 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     welcome: {
-        color: COLORS.white,
         fontFamily: FONT.bold,
         fontSize: wp(9),
         marginBottom: hp(0.5),
@@ -129,20 +130,17 @@ const styles = StyleSheet.create({
         marginBottom: hp(2),
     },
     subtitle: {
-        color: COLORS.white,
         fontFamily: FONT.regular,
         fontSize: wp(5),
         marginBottom: hp(3),
         lineHeight: hp(3.5),
     },
     accountText: {
-        color: COLORS.lightWhite,
         fontFamily: FONT.regular,
         fontSize: wp(4),
         marginBottom: hp(0.25),
     },
     createAccount: {
-        color: COLORS.white,
         fontFamily: FONT.semiBold,
         fontSize: wp(4),
         textDecorationLine: 'underline',
@@ -154,7 +152,6 @@ const styles = StyleSheet.create({
         paddingTop: hp(4),
     },
     loginTitle: {
-        color: COLORS.brown,
         fontFamily: FONT.bold,
         fontSize: wp(7),
         marginBottom: hp(3),

@@ -1,7 +1,7 @@
 import { StyleSheet, View } from 'react-native'
 import React, { useEffect } from 'react'
 import { icons } from '../../../constants/icons'
-import { COLORS, wp } from '../../../constants/StyleGuide'
+import { COLORS, hp, wp } from '../../../constants/StyleGuide'
 import { useNavigation } from '@react-navigation/native'
 import type { StackNavigationProp } from '@react-navigation/stack'
 import * as Animatable from 'react-native-animatable'
@@ -47,6 +47,10 @@ const styles = StyleSheet.create({
     logo: {
         width: wp(50),
         height: wp(50),
-        resizeMode: 'contain'
-    }
+        resizeMode: 'contain',
+        borderRadius: hp(1.5),
+    },
+    logoContainer: {
+        borderRadius: hp(1.5),
+    },
 })

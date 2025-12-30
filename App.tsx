@@ -3,14 +3,25 @@ import { StyleSheet, StatusBar } from 'react-native'
 import React from 'react'
 import AppNavigator from './src/navigation/AppNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import 'react-native-reanimated';
+
+const AppContent = () => {
+  const { theme } = useTheme();
+  
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle={theme === 'light' ? 'dark-content' : 'light-content'} />
+      <AppNavigator />
+    </SafeAreaView>
+  )
+};
 
 const App = () => {
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" />
-      <AppNavigator />
-    </SafeAreaView>
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
   )
 };
 

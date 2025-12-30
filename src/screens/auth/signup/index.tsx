@@ -4,7 +4,8 @@ import * as Animatable from 'react-native-animatable';
 import LinearGradient from 'react-native-linear-gradient';
 import CustomInput from '../../../components/CustomInput';
 import CustomButton from '../../../components/CustomButton';
-import { COLORS, FONT, wp, hp } from '../../../constants/StyleGuide';
+import { FONT, wp, hp } from '../../../constants/StyleGuide';
+import { useTheme } from '../../../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import type { StackNavigationProp } from '@react-navigation/stack';
 import Loader from '../../../components/Loader';
@@ -22,6 +23,7 @@ const validateEmail = (email: string) => {
 
 const Signup: React.FC = () => {
     const navigation = useNavigation<StackNavigationProp<RootStackParamList>>();
+    const { colors } = useTheme();
     const [name, setName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [password, setPassword] = useState<string>('');
@@ -120,17 +122,17 @@ const Signup: React.FC = () => {
 
     return (
         <KeyboardAvoidingView
-            style={{ flex: 1, backgroundColor: COLORS.primary }}
-            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1, backgroundColor: colors.primary }}
+            behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
         >
             <ScrollView
                 ref={scrollViewRef}
-                contentContainerStyle={{ flexGrow: 1, paddingBottom: hp(30) }}
+                contentContainerStyle={{ flexGrow: 1, paddingBottom: hp(8) }}
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
                 <LinearGradient
-                    colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+                    colors={colors.gradientColors}
                     start={{x: 0, y: 0}}
                     end={{x: 1, y: 1}}
                     style={styles.gradient}
@@ -140,11 +142,11 @@ const Signup: React.FC = () => {
                         duration={900}
                         style={styles.header}
                     >
-                        <Text style={styles.welcome}>Welcome to{`\n`}Busy Fool <Text style={styles.coffee}>☕️</Text></Text>
-                        <Text style={styles.subtitle}>Track your margins. Own your{`\n`}menu. Make every latte count.</Text>
-                        <Text style={styles.accountText}>Already have an account?</Text>
+                        <Text style={[styles.welcome, { color: colors.white }]}>Welcome to{`\n`}Busy Fool <Text style={styles.coffee}>☕️</Text></Text>
+                        <Text style={[styles.subtitle, { color: colors.white }]}>Track your margins. Own your{`\n`}menu. Make every latte count.</Text>
+                        <Text style={[styles.accountText, { color: colors.lightWhite }]}>Already have an account?</Text>
                         <TouchableOpacity onPress={() => navigation.goBack()}>
-                            <Text style={styles.loginInstead}>Login instead</Text>
+                            <Text style={[styles.loginInstead, { color: colors.white }]}>Login instead</Text>
                         </TouchableOpacity>
                     </Animatable.View>
                 </LinearGradient>
@@ -155,7 +157,7 @@ const Signup: React.FC = () => {
                         delay={400}
                         style={styles.formContainer}
                     >
-                        <Text style={styles.signupTitle}>Create your account</Text>
+                        <Text style={[styles.signupTitle, { color: colors.brown }]}>Create your account</Text>
                         <CustomInput
                             label="Name"
                             placeholder="Enter your name"
@@ -241,7 +243,6 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     welcome: {
-        color: COLORS.white,
         fontFamily: FONT.bold,
         fontSize: wp(9),
         marginBottom: hp(0.5),
@@ -251,20 +252,17 @@ const styles = StyleSheet.create({
         fontSize: wp(8),
     },
     subtitle: {
-        color: COLORS.white,
         fontFamily: FONT.regular,
         fontSize: wp(5),
         marginBottom: hp(3),
         lineHeight: hp(3.5),
     },
     accountText: {
-        color: COLORS.lightWhite,
         fontFamily: FONT.regular,
         fontSize: wp(4),
         marginBottom: hp(0.25),
     },
     loginInstead: {
-        color: COLORS.white,
         fontFamily: FONT.semiBold,
         fontSize: wp(4),
         textDecorationLine: 'underline',
@@ -276,7 +274,6 @@ const styles = StyleSheet.create({
         paddingTop: hp(4),
     },
     signupTitle: {
-        color: COLORS.brown,
         fontFamily: FONT.bold,
         fontSize: wp(7),
         marginBottom: hp(3),
