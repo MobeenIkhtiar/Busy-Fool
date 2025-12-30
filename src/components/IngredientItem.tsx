@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
-import { COLORS, hp, wp, FONT } from '../constants/StyleGuide';
+import { hp, wp, FONT } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
 
 interface IngredientItemProps {
@@ -20,11 +21,22 @@ interface IngredientItemProps {
 }
 
 const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) => {
+    const { colors, theme } = useTheme();
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+
     return (
-        <TouchableOpacity style={styles.container} onPress={onPress}>
+        <TouchableOpacity style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                shadowColor: colors.black,
+            }
+        ]} onPress={onPress}>
             {/* Header Section with Name and Action Icons */}
             <View style={styles.header}>
-                <Text style={styles.name}>{ingredient.name}</Text>
+                <Text style={[styles.name, { color: colors.black }]}>{ingredient.name}</Text>
                 <View style={styles.actionIcons}>
                     <TouchableOpacity style={styles.iconButton}>
                         <View style={styles.editIcon}>
@@ -48,8 +60,8 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) 
             </View>
 
             {/* Category Tag */}
-            <View style={styles.categoryTag}>
-                <Text style={styles.categoryText}>{ingredient.category}</Text>
+            <View style={[styles.categoryTag, { borderColor: colors.brown }]}>
+                <Text style={[styles.categoryText, { color: colors.brown }]}>{ingredient.category}</Text>
             </View>
 
             {/* Details Grid */}
@@ -57,13 +69,13 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) 
                 {/* First Row */}
                 <View style={styles.detailRow}>
                     <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>True Cost:</Text>
+                        <Text style={[styles.detailLabel, { color: colors.black }]}>True Cost:</Text>
                         <Text style={styles.costValue}>${ingredient.cost.toFixed(4)}</Text>
                     </View>
                     <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Waste:</Text>
+                        <Text style={[styles.detailLabel, { color: colors.black }]}>Waste:</Text>
                         <View style={styles.wastePill}>
-                            <Text style={styles.wasteValue}>{ingredient.waste || 5}%</Text>
+                            <Text style={[styles.wasteValue, { color: colors.gray }]}>{ingredient.waste || 5}%</Text>
                         </View>
                     </View>
                 </View>
@@ -71,21 +83,21 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) 
                 {/* Second Row */}
                 <View style={styles.detailRow}>
                     <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Stock:</Text>
+                        <Text style={[styles.detailLabel, { color: colors.black }]}>Stock:</Text>
                         <View style={styles.stockContainer}>
                             <View style={styles.packageIcon}>
                                 <Image
                                     source={icons.box}
                                     style={{ width: wp(3), height: wp(3), resizeMode: 'contain' }}
-                                    tintColor={COLORS.black}
+                                    tintColor={colors.black}
                                 />
                             </View>
-                            <Text style={styles.stockValue}>{ingredient.quantity}</Text>
+                            <Text style={[styles.stockValue, { color: colors.black }]}>{ingredient.quantity}</Text>
                         </View>
                     </View>
                     <View style={styles.detailItem}>
-                        <Text style={styles.detailLabel}>Supplier:</Text>
-                        <Text style={styles.supplierValue}>{ingredient.supplier || 'Coffee Roasters Ltd'}</Text>
+                        <Text style={[styles.detailLabel, { color: colors.black }]}>Supplier:</Text>
+                        <Text style={[styles.supplierValue, { color: colors.black }]}>{ingredient.supplier || 'Coffee Roasters Ltd'}</Text>
                     </View>
                 </View>
             </View>
@@ -95,11 +107,9 @@ const IngredientItem: React.FC<IngredientItemProps> = ({ ingredient, onPress }) 
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(4),
         marginBottom: hp(2),
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: hp(0.25) },
         shadowOpacity: 0.1,
         shadowRadius: wp(1),
@@ -115,7 +125,6 @@ const styles = StyleSheet.create({
     name: {
         fontSize: wp(4.2),
         fontFamily: FONT.bold,
-        color: COLORS.black,
         flex: 1,
         marginRight: wp(2),
     },
@@ -146,7 +155,6 @@ const styles = StyleSheet.create({
     categoryTag: {
         alignSelf: 'flex-start',
         borderWidth: 1,
-        borderColor: COLORS.brown,
         paddingHorizontal: wp(3),
         paddingVertical: hp(0.5),
         borderRadius: wp(1.5),
@@ -155,7 +163,6 @@ const styles = StyleSheet.create({
     categoryText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.brown,
     },
     detailsGrid: {
         gap: hp(1.5),
@@ -171,7 +178,6 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     costValue: {
         fontSize: wp(3.5),
@@ -188,7 +194,6 @@ const styles = StyleSheet.create({
     wasteValue: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.gray,
     },
     stockContainer: {
         flexDirection: 'row',
@@ -207,12 +212,10 @@ const styles = StyleSheet.create({
     stockValue: {
         fontSize: wp(3.8),
         fontFamily: FONT.bold,
-        color: COLORS.black,
     },
     supplierValue: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
 });
 

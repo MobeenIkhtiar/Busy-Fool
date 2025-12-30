@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
-import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
+import { FONT, wp, hp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
 
 interface MissingRecipeProduct {
@@ -18,43 +19,58 @@ const MissingRecipeDetectionCard: React.FC<MissingRecipeDetectionCardProps> = ({
     products,
     onAddRecipe
 }) => {
+    const { colors, theme } = useTheme();
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+    const productEntryBg = theme === 'light' ? '#FEFCE8' : colors.primary;
+
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                shadowColor: colors.black,
+            }
+        ]}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <View style={styles.iconContainer}>
                         <Image source={icons.exclamation} style={styles.icon} />
                     </View>
-                    <Text style={styles.title}>Missing Recipe Detection</Text>
+                    <Text style={[styles.title, { color: colors.brown }]}>Missing Recipe Detection</Text>
                 </View>
             </View>
 
             {/* Description */}
-            <Text style={styles.description}>
+            <Text style={[styles.description, { color: colors.lightgray }]}>
                 Found products being sold without proper cost tracking:
             </Text>
 
             {/* Product Entries */}
             {products.map((product, index) => (
-                <View key={index} style={styles.productEntry}>
-                    <Text style={styles.productName}>{product.name}</Text>
+                <View key={index} style={[
+                    styles.productEntry,
+                    { backgroundColor: productEntryBg }
+                ]}>
+                    <Text style={[styles.productName, { color: colors.brown }]}>{product.name}</Text>
                     <View style={styles.productDetails}>
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Sales found:</Text>
-                            <Text style={styles.detailValue}>{product.salesFound}</Text>
+                            <Text style={[styles.detailLabel, { color: colors.brown }]}>Sales found:</Text>
+                            <Text style={[styles.detailValue, { color: colors.brown }]}>{product.salesFound}</Text>
                         </View>
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Est. loss each:</Text>
+                            <Text style={[styles.detailLabel, { color: colors.brown }]}>Est. loss each:</Text>
                             <Text style={styles.lossValue}>{product.estimatedLoss}</Text>
                         </View>
                     </View>
                     <TouchableOpacity
-                        style={styles.addRecipeButton}
+                        style={[styles.addRecipeButton, { backgroundColor: colors.brown }]}
                         onPress={() => onAddRecipe?.(product.name)}
                     >
                         <Image source={icons.coffee} style={styles.buttonIcon} />
-                        <Text style={styles.buttonText}>Add Recipe</Text>
+                        <Text style={[styles.buttonText, { color: colors.white }]}>Add Recipe</Text>
                     </TouchableOpacity>
                 </View>
             ))}
@@ -64,10 +80,8 @@ const MissingRecipeDetectionCard: React.FC<MissingRecipeDetectionCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(6),
-        shadowColor: '#000',
         marginTop: hp(2),
         shadowOffset: {
             width: 0,
@@ -100,17 +114,14 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp(4.5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
     },
     description: {
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.lightgray,
         marginBottom: hp(2),
         lineHeight: hp(2.2),
     },
     productEntry: {
-        backgroundColor: '#FEFCE8',
         borderRadius: wp(2),
         padding: wp(3),
         marginBottom: hp(1.5),
@@ -118,7 +129,6 @@ const styles = StyleSheet.create({
     productName: {
         fontSize: wp(4),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(1),
     },
     productDetails: {
@@ -133,12 +143,10 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontSize: wp(3.2),
         fontFamily: FONT.regular,
-        color: COLORS.brown,
     },
     detailValue: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.brown,
     },
     lossValue: {
         fontSize: wp(3.2),
@@ -146,7 +154,6 @@ const styles = StyleSheet.create({
         color: '#EA580B',
     },
     addRecipeButton: {
-        backgroundColor: COLORS.brown,
         borderRadius: wp(2),
         paddingVertical: hp(1),
         paddingHorizontal: wp(3),
@@ -157,14 +164,13 @@ const styles = StyleSheet.create({
     buttonIcon: {
         width: wp(3.5),
         height: wp(3.5),
-        tintColor: COLORS.white,
+        tintColor: '#ffffff',
         marginRight: wp(1.5),
         resizeMode: 'contain'
     },
     buttonText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.white,
     },
 });
 

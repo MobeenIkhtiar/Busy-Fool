@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Text, StyleSheet } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { COLORS, FONT, hp, wp } from '../constants/StyleGuide';
+import { FONT, hp, wp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import ProgressBar from './ProgressBar';
 
 type StatCardProps = {
@@ -13,6 +14,7 @@ type StatCardProps = {
 };
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, color, valueColor, progress }) => {
+    const { colors, theme } = useTheme();
     const [animatedProgress, setAnimatedProgress] = useState(0);
     const [isVisible, setIsVisible] = useState(false);
 
@@ -24,13 +26,16 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, color, valueColor, pr
         return () => clearTimeout(timer);
     }, [progress]);
 
+    // Card background: white in light mode, dark in dark mode
+    const cardBackgroundColor = theme === 'light' ? colors.white : colors.primary;
+
     return (
         <Animatable.View
             animation={isVisible ? "fadeIn" : undefined}
             duration={600}
-            style={styles.card}
+            style={[styles.card, { backgroundColor: cardBackgroundColor, shadowColor: colors.black }]}
         >
-            <Text style={styles.cardLabel}>{label}</Text>
+            <Text style={[styles.cardLabel, { color: colors.gray }]}>{label}</Text>
             <Animatable.Text
                 animation={isVisible ? "zoomIn" : undefined}
                 duration={800}
@@ -46,11 +51,9 @@ const StatCard: React.FC<StatCardProps> = ({ label, value, color, valueColor, pr
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(2),
         padding: wp(5),
         marginBottom: 16,
-        shadowColor: COLORS.black,
         shadowOpacity: 0.04,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 8,
@@ -59,7 +62,6 @@ const styles = StyleSheet.create({
     },
     cardLabel: {
         fontSize: wp(3),
-        color: COLORS.gray,
         fontFamily: FONT.medium,
         marginBottom: hp(.5),
         textAlign: 'center',

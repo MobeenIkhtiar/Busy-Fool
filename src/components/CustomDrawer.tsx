@@ -25,9 +25,14 @@ const CustomDrawer: React.FC<DrawerContentComponentProps> = ({ navigation, state
         });
     };
 
+    // Drawer gradient: use dark gradient in dark mode, light gradient in light mode
+    const drawerGradient = theme === 'dark' 
+        ? ['#0d1512', '#0f1a16', '#0a120f']
+        : colors.drawerGradient;
+
     return (
         <LinearGradient
-            colors={colors.drawerGradient}
+            colors={drawerGradient}
             start={{x: 0, y: 0}}
             end={{x: 0, y: 1}}
             style={styles.sidebar}

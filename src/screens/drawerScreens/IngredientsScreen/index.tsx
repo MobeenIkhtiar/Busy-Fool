@@ -10,10 +10,11 @@ import AddIngredientModal from '../../../components/AddIngredientModal'
 import { useNavigation } from '@react-navigation/native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { pick } from '@react-native-documents/picker'
+import { fileService, ApiError } from '../../../services'
 
 const IngredientsScreen = () => {
     const navigation = useNavigation();
-    const { colors } = useTheme();
+    const { colors, theme } = useTheme();
     // Sample ingredient data
     const sampleIngredients = [
         {
@@ -207,15 +208,32 @@ const IngredientsScreen = () => {
             uri: file.uri,
         });
         
-        // TODO: Call API here
-        // Example:
-        // try {
-        //     const response = await uploadFile(file);
-        //     console.log('File uploaded successfully:', response);
-        // } catch (error) {
-        //     console.error('File upload error:', error);
-        //     Alert.alert('Error', 'Failed to upload file. Please try again.');
-        // }
+        try {
+            // Call the API to upload the file
+            // Pass file object with uri, name, and type
+            const response = await fileService.uploadDocument({
+                uri: file.uri,
+                name: file.name,
+                type: file.type,
+            });
+            
+            console.log('File uploaded successfully:', response);
+            
+            // Show success message with summary
+            const summary = response.summary;
+            Alert.alert(
+                'Success',
+                `${response.message}\n\n` +
+                `Files processed: ${summary.successfullyProcessed}/${summary.totalFiles}\n` +
+                `Ingredients created: ${summary.ingredientsCreated}\n` +
+                `Ingredients updated: ${summary.ingredientsUpdated}`,
+                [{ text: 'OK' }]
+            );
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            console.error('File upload error:', apiError);
+            Alert.alert('Error', apiError.message || 'Failed to upload file. Please try again.');
+        }
     };
 
     return (
@@ -238,23 +256,23 @@ const IngredientsScreen = () => {
                             <Text style={[styles.addButtonText, { color: colors.white }]}>Add Ingredient</Text>
                         </TouchableOpacity>
                         <TouchableOpacity 
-                            style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}
+                            style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}
                             onPress={handleUploadDoc}
                         >
-                            <Ionicons name="cloud-upload-outline" size={wp(4)} color="#000000" />
-                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Upload Doc</Text>
+                            <Ionicons name="cloud-upload-outline" size={wp(4)} color={colors.black} />
+                            <Text style={[styles.filterButtonText, { color: colors.black }]}>Upload Doc</Text>
                         </TouchableOpacity>
                     </View>
 
                     {/* Row 2: Export CSV & Import CSV */}
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
-                            <Image source={icons.export} style={[styles.buttonIcon, { tintColor: '#000000' }]} />
-                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Export CSV</Text>
+                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
+                            <Image source={icons.export} style={[styles.buttonIcon, { tintColor: colors.black }]} />
+                            <Text style={[styles.filterButtonText, { color: colors.black }]}>Export CSV</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
-                            <Ionicons name="cloud-download-outline" size={wp(4)} color="#000000" />
-                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Import CSV</Text>
+                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
+                            <Ionicons name="cloud-download-outline" size={wp(4)} color={colors.black} />
+                            <Text style={[styles.filterButtonText, { color: colors.black }]}>Import CSV</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -328,7 +346,7 @@ const styles = StyleSheet.create({
     },
     filterButton: {
         flex: 1,
-        paddingVertical: hp(1),
+        height: hp(5),
         borderWidth: 1,
         borderRadius: wp(2),
         justifyContent: 'center',
@@ -338,11 +356,11 @@ const styles = StyleSheet.create({
     filterButtonText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        marginLeft: wp(4),
+        marginLeft: wp(2),
     },
     addButton: {
         flex: 1,
-        paddingVertical: hp(1.5),
+        height: hp(5),
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -351,7 +369,7 @@ const styles = StyleSheet.create({
     addButtonText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        marginLeft: wp(4),
+        marginLeft: wp(2),
     },
     buttonIcon: {
         width: wp(3.5),

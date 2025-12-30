@@ -32,6 +32,9 @@ export const API_CONFIG = {
             PREFERENCES: '/user/preferences',
             ACCOUNT: '/user/account',
         },
+        MINDEE: {
+            UPLOAD: '/mindee/upload',
+        },
     },
 
     // Storage keys

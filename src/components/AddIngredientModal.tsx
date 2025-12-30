@@ -155,7 +155,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
             <TouchableOpacity
                 style={[
                     styles.dropdownContainer,
-                    { borderColor: colors.brown, backgroundColor: '#F5F5F5' },
+                    { borderColor: colors.brown, backgroundColor: colors.primary },
                     error && [styles.inputError, { borderColor: colors.red }]
                 ]}
                 onPress={onToggle}
@@ -236,7 +236,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                 <TextInput
                                     style={[
                                         styles.textInput,
-                                        { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black },
+                                        { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black },
                                         validationErrors.name && [styles.inputError, { borderColor: colors.red }]
                                     ]}
                                     placeholder="e.g., Oat Milk"
@@ -276,7 +276,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                 <View style={[styles.inputContainer, styles.halfWidth]}>
                                     <Text style={[styles.label, { color: colors.brown }]}>Package Size</Text>
                                     <TextInput
-                                        style={[styles.textInput, { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black }]}
+                                        style={[styles.textInput, { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black }]}
                                         placeholder="1"
                                         placeholderTextColor={colors.gray}
                                         value={formData.packageSize}
@@ -294,7 +294,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                 <TextInput
                                     style={[
                                         styles.textInput,
-                                        { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black },
+                                        { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black },
                                         validationErrors.purchasePrice && [styles.inputError, { borderColor: colors.red }]
                                     ]}
                                     placeholder="0.00"
@@ -312,7 +312,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                             <View style={styles.inputContainer}>
                                 <Text style={[styles.label, { color: colors.brown }]}>Waste %</Text>
                                 <TextInput
-                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black }]}
+                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black }]}
                                     placeholder="5"
                                     placeholderTextColor={colors.gray}
                                     value={formData.wastePercentage}
@@ -335,7 +335,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                             <View style={styles.inputContainer}>
                                 <Text style={[styles.label, { color: colors.brown }]}>Current Stock Level</Text>
                                 <TextInput
-                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black }]}
+                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black }]}
                                     placeholder="0"
                                     placeholderTextColor={colors.gray}
                                     value={formData.currentStockLevel}
@@ -343,17 +343,17 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                     keyboardType="numeric"
                                 />
                             </View>
-                        </ScrollView>
 
-                        {/* Action Buttons */}
-                        <View style={[styles.actionButtons, { borderTopColor: colors.lightgray }]}>
-                            <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]} onPress={onClose}>
-                                <Text style={[styles.cancelButtonText, { color: '#000000' }]}>Cancel</Text>
-                            </TouchableOpacity>
-                            <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.brown }]} onPress={handleSubmit}>
-                                <Text style={[styles.submitButtonText, { color: colors.white }]}>Add Ingredient</Text>
-                            </TouchableOpacity>
-                        </View>
+                            {/* Action Buttons */}
+                            <View style={[styles.actionButtons, { borderTopColor: colors.lightgray }]}>
+                                <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]} onPress={onClose}>
+                                    <Text style={[styles.cancelButtonText, { color: '#000000' }]}>Cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.brown }]} onPress={handleSubmit}>
+                                    <Text style={[styles.submitButtonText, { color: colors.white }]}>Add Ingredient</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </ScrollView>
                     </View>
                 </View>
             </KeyboardAvoidingView>
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: wp(3),
         paddingTop: hp(4),
-        paddingBottom: hp(5),
+        
     },
     modalContent: {
         flex: 1,
@@ -405,7 +405,7 @@ const styles = StyleSheet.create({
     formContainer: {
         paddingHorizontal: wp(5),
         paddingTop: hp(2),
-        paddingBottom: hp(10),
+        paddingBottom: hp(3),
     },
     inputContainer: {
         marginBottom: hp(2),
@@ -487,13 +487,14 @@ const styles = StyleSheet.create({
     actionButtons: {
         flexDirection: 'row',
         gap: wp(3),
-        paddingHorizontal: wp(5),
-        paddingVertical: hp(3),
+        paddingTop: hp(3),
+        paddingBottom: hp(1),
+        marginTop: hp(2),
         borderTopWidth: .5,
     },
     cancelButton: {
         flex: 1,
-        paddingVertical: hp(1.5),
+        height: hp(5),
         borderWidth: 1,
         borderRadius: wp(2),
         justifyContent: 'center',
@@ -505,7 +506,7 @@ const styles = StyleSheet.create({
     },
     submitButton: {
         flex: 1,
-        paddingVertical: hp(1.5),
+        height: hp(5),
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',

@@ -6,8 +6,11 @@ import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
 const ProfileScreen = () => {
-    const { colors } = useTheme();
+    const { colors, theme } = useTheme();
     const navigation = useNavigation();
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
     
     const ProfileIcon = () => (
         <View style={[styles.profileIcon, { backgroundColor: colors.lightBlue }]}>
@@ -66,7 +69,7 @@ const ProfileScreen = () => {
                 </View> */}
 
                 {/* Profile Details Section (formerly modal content) */}
-                <View style={[styles.profileDetailsSection, { backgroundColor: colors.white, shadowColor: colors.black }]}>
+                <View style={[styles.profileDetailsSection, { backgroundColor: cardBg, shadowColor: colors.black }]}>
                     {/* Header Section */}
                     <View style={[styles.headerSection, { backgroundColor: colors.brown }]}>
                         <View style={styles.headerLeft}>
@@ -86,11 +89,11 @@ const ProfileScreen = () => {
                     </View>
 
                     {/* Menu Section */}
-                    <View style={[styles.menuSection, { backgroundColor: colors.white }]}>
+                    <View style={[styles.menuSection, { backgroundColor: cardBg }]}>
                         <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
                             <ProfileIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={[styles.menuItemTitle, { color: colors.brown }]}>My Profile</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.black }]}>My Profile</Text>
                                 <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>View and edit your profile</Text>
                             </View>
                         </TouchableOpacity>
@@ -98,7 +101,7 @@ const ProfileScreen = () => {
                         <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
                             <SettingsIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={[styles.menuItemTitle, { color: colors.brown }]}>Account Settings</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.black }]}>Account Settings</Text>
                                 <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>Manage your account preferences</Text>
                             </View>
                         </TouchableOpacity>
@@ -114,14 +117,14 @@ const ProfileScreen = () => {
                         <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
                             <HelpIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={[styles.menuItemTitle, { color: colors.brown }]}>Help & Support</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.black }]}>Help & Support</Text>
                                 <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>Get help and contact support</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
 
                     {/* Footer Section */}
-                    <View style={[styles.footerSection, { backgroundColor: colors.white, borderTopColor: colors.lightWhite }]}>
+                    <View style={[styles.footerSection, { backgroundColor: cardBg, borderTopColor: colors.lightWhite }]}>
                         <Text style={[styles.footerText, { color: colors.lightgray }]}>Member since Jan 2024</Text>
                     </View>
                 </View>

@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
-import { COLORS, FONT, hp, wp } from '../constants/StyleGuide';
+import { FONT, hp, wp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 
 type SearchFilterSectionProps = {
     searchValue: string;
@@ -19,15 +20,30 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
     statusFilter,
     onStatusFilterChange: _onStatusFilterChange
 }) => {
+    const { colors, theme } = useTheme();
+    
+    // Background: white in light mode, dark in dark mode
+    const containerBg = theme === 'light' ? colors.white : colors.primary;
+    const searchFilterBg = theme === 'light' ? colors.primary : colors.lightWhite;
+
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: containerBg,
+                shadowColor: colors.black,
+            }
+        ]}>
             {/* Search Bar */}
-            <View style={styles.searchContainer}>
+            <View style={[
+                styles.searchContainer,
+                { backgroundColor: searchFilterBg }
+            ]}>
                 <Text style={styles.searchIcon}>🔍</Text>
                 <TextInput
-                    style={styles.searchInput}
+                    style={[styles.searchInput, { color: colors.black }]}
                     placeholder="Search products, ingredients, or categories"
-                    placeholderTextColor={COLORS.lightgray}
+                    placeholderTextColor={colors.lightgray}
                     value={searchValue}
                     onChangeText={onSearchChange}
                 />
@@ -35,14 +51,20 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
 
             {/* Filter Dropdowns */}
             <View style={styles.filterContainer}>
-                <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>{categoryFilter}</Text>
-                    <Text style={styles.chevronIcon}>▼</Text>
+                <TouchableOpacity style={[
+                    styles.filterButton,
+                    { backgroundColor: searchFilterBg }
+                ]}>
+                    <Text style={[styles.filterText, { color: colors.black }]}>{categoryFilter}</Text>
+                    <Text style={[styles.chevronIcon, { color: colors.lightgray }]}>▼</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity style={styles.filterButton}>
-                    <Text style={styles.filterText}>{statusFilter}</Text>
-                    <Text style={styles.chevronIcon}>▼</Text>
+                <TouchableOpacity style={[
+                    styles.filterButton,
+                    { backgroundColor: searchFilterBg }
+                ]}>
+                    <Text style={[styles.filterText, { color: colors.black }]}>{statusFilter}</Text>
+                    <Text style={[styles.chevronIcon, { color: colors.lightgray }]}>▼</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -51,10 +73,8 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(2),
         padding: wp(4),
-        shadowColor: COLORS.black,
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,
@@ -64,7 +84,6 @@ const styles = StyleSheet.create({
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.primary,
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
         paddingVertical: hp(1.5),
@@ -78,7 +97,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.black,
     },
     filterContainer: {
         flexDirection: 'row',
@@ -89,7 +107,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        backgroundColor: COLORS.primary,
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
         paddingVertical: hp(1.5),
@@ -97,11 +114,9 @@ const styles = StyleSheet.create({
     filterText: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     chevronIcon: {
         fontSize: wp(3),
-        color: COLORS.lightgray,
     },
 });
 

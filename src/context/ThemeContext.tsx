@@ -35,7 +35,7 @@ const lightColors = {
 };
 
 const darkColors = {
-    primary: '#1a1a1a',
+    primary: '#0d1512',
     white: '#ffffff',
     lightWhite: '#EBEBEB40',
     brown: '#3a9d66',
@@ -53,9 +53,9 @@ const darkColors = {
     lightOrange: '#F973161A',
     lightPurple: '#8B5CF61A',
     lightRed: '#F044381A',
-    gradientStart: 'rgba(58, 157, 102, 0.9)',
-    gradientEnd: 'rgba(6, 78, 59, 0.8)',
-    gradientColors: ['rgba(58, 157, 102, 0.9)', 'rgba(58, 157, 102, 0.7)', 'rgba(6, 78, 59, 0.8)'],
+    gradientStart: '#0d1512',
+    gradientEnd: '#0a120f',
+    gradientColors: ['#0d1512', '#0f1a16', '#0a120f'],
     drawerGradient: ['#064e3b', 'rgba(6, 78, 59, 0.9)', 'rgba(6, 78, 59, 0.7)'],
 };
 

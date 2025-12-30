@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { COLORS, FONT, hp, wp } from '../constants/StyleGuide';
+import { FONT, hp, wp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 
 
 interface MetricCardProps {
@@ -11,19 +12,48 @@ interface MetricCardProps {
     iconBackground?: string;
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor = COLORS.brown, iconBackground = COLORS.lightgray }) => {
+const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor, iconBackground }) => {
+    const { colors, theme } = useTheme();
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+    
+    // Default icon colors if not provided
+    const defaultIconColor = iconColor || colors.brown;
+    const defaultIconBackground = iconBackground || colors.lightgray;
+    
+    // Text colors: black in light mode, white/light gray in dark mode
+    const labelColor = theme === 'light' ? colors.gray : colors.gray;
+    const valueColor = theme === 'light' ? colors.black : colors.white;
+
     return (
-        <View style={styles.card}>
-            <View style={[styles.iconContainer, { backgroundColor: iconBackground }]}>
+        <View style={[
+            styles.card,
+            {
+                backgroundColor: cardBg,
+                shadowColor: colors.black,
+                borderColor: colors.lightWhite,
+            }
+        ]}>
+            {iconBackground && (
+                <View style={[styles.iconContainer, { backgroundColor: defaultIconBackground }]}>
+                    <Image
+                        source={icon}
+                        style={[styles.icon, { tintColor: defaultIconColor }]}
+                        resizeMode="contain"
+                    />
+                </View>
+            )}
+            {!iconBackground && (
                 <Image
                     source={icon}
-                    style={[styles.icon, { tintColor: iconColor }]}
+                    style={[styles.icon, { tintColor: defaultIconColor }]}
                     resizeMode="contain"
                 />
-            </View>
+            )}
             <View style={styles.content}>
-                <Text style={styles.label}>{label}</Text>
-                <Text style={styles.value}>{value}</Text>
+                <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+                <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
             </View>
         </View>
     );
@@ -31,13 +61,12 @@ const MetricCard: React.FC<MetricCardProps> = ({ icon, label, value, iconColor =
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(4),
         marginBottom: hp(2),
         flexDirection: 'row',
         alignItems: 'center',
-        shadowColor: '#000',
+        borderWidth: 1,
         shadowOffset: {
             width: 0,
             height: 2,
@@ -58,6 +87,7 @@ const styles = StyleSheet.create({
     icon: {
         width: wp(5),
         height: wp(5),
+        marginRight: wp(3),
     },
     content: {
         flex: 1,
@@ -65,13 +95,11 @@ const styles = StyleSheet.create({
     label: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.black,
         marginBottom: hp(0.5),
     },
     value: {
         fontSize: wp(4.5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
     },
 });
 

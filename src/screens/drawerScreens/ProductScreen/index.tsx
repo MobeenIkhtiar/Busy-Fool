@@ -13,7 +13,7 @@ import { icons } from '../../../constants/icons'
 
 const ProductScreen = () => {
     const navigation = useNavigation();
-    const { colors } = useTheme();
+    const { colors, theme } = useTheme();
     const [searchValue, setSearchValue] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('Coffee');
     const [statusFilter, setStatusFilter] = useState('Profitable');
@@ -104,9 +104,9 @@ const ProductScreen = () => {
                     </View>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
+                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
                             <Image source={icons.filter} style={[styles.buttonIcon, { tintColor: colors.black }]} />
-                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Filters</Text>
+                            <Text style={[styles.filterButtonText, { color: colors.black }]}>Filters</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.brown }]}>
                             <Image source={icons.plus} style={[styles.buttonIcon, { tintColor: colors.white }]} />
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     },
     filterButton: {
         flex: 1,
-        paddingVertical: hp(1),
+        height: hp(5),
         borderWidth: 1,
         borderRadius: wp(2),
         justifyContent: 'center',
@@ -218,11 +218,11 @@ const styles = StyleSheet.create({
     filterButtonText: {
         fontSize: wp(4),
         fontFamily: FONT.medium,
-        marginLeft: wp(4),
+        marginLeft: wp(2),
     },
     addButton: {
         flex: 1,
-        paddingVertical: hp(1.5),
+        height: hp(5),
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',

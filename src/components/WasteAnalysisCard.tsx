@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
+import { FONT, wp, hp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
 
 interface WasteItem {
@@ -21,41 +22,60 @@ const WasteAnalysisCard: React.FC<WasteAnalysisCardProps> = ({
     wasteItems,
     totalWasteValue
 }) => {
+    const { colors, theme } = useTheme();
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+    const wasteItemBg = theme === 'light' ? '#FFFBF5' : colors.primary;
+    const wasteItemBorder = theme === 'light' ? '#FFEDD5' : colors.lightWhite;
+
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                shadowColor: colors.black,
+            }
+        ]}>
             {/* Header */}
             <View style={styles.header}>
                 <View style={styles.headerLeft}>
                     <View style={styles.iconContainer}>
                         <Image source={icons.delete} style={styles.icon} />
                     </View>
-                    <Text style={styles.title}>Waste Analysis</Text>
+                    <Text style={[styles.title, { color: colors.brown }]}>Waste Analysis</Text>
                 </View>
                 <View style={styles.headerRight}>
-                    <Text style={styles.totalLabel}>Total Waste Value</Text>
+                    <Text style={[styles.totalLabel, { color: colors.brown }]}>Total Waste Value</Text>
                     <Text style={styles.totalValue}>{totalWasteValue}</Text>
                 </View>
             </View>
 
             {/* Waste Items */}
             {wasteItems.map((item, index) => (
-                <View key={index} style={styles.wasteItem}>
-                    <Text style={styles.itemName}>{item.name}</Text>
+                <View key={index} style={[
+                    styles.wasteItem,
+                    {
+                        backgroundColor: wasteItemBg,
+                        borderColor: wasteItemBorder,
+                    }
+                ]}>
+                    <Text style={[styles.itemName, { color: colors.brown }]}>{item.name}</Text>
                     <View style={styles.itemDetails}>
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Purchased:</Text>
-                            <Text style={styles.detailValue}>{item.purchased}</Text>
+                            <Text style={[styles.detailLabel, { color: theme === 'light' ? '#4B5563' : colors.gray }]}>Purchased:</Text>
+                            <Text style={[styles.detailValue, { color: colors.brown }]}>{item.purchased}</Text>
                         </View>
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Used:</Text>
-                            <Text style={styles.detailValue}>{item.used}</Text>
+                            <Text style={[styles.detailLabel, { color: theme === 'light' ? '#4B5563' : colors.gray }]}>Used:</Text>
+                            <Text style={[styles.detailValue, { color: colors.brown }]}>{item.used}</Text>
                         </View>
-                        <View style={[styles.detailRow, { borderBottomWidth: 1, borderBottomColor: '#FED7AA', paddingBottom: hp(1) }]}>
-                            <Text style={styles.detailLabel}>Wasted:</Text>
+                        <View style={[styles.detailRow, { borderBottomWidth: 1, borderBottomColor: theme === 'light' ? '#FED7AA' : colors.lightWhite, paddingBottom: hp(1) }]}>
+                            <Text style={[styles.detailLabel, { color: theme === 'light' ? '#4B5563' : colors.gray }]}>Wasted:</Text>
                             <Text style={styles.wastedValue}>{item.wasted} ({item.wastePercentage})</Text>
                         </View>
                         <View style={styles.detailRow}>
-                            <Text style={styles.detailLabel}>Waste Value:</Text>
+                            <Text style={[styles.detailLabel, { color: theme === 'light' ? '#4B5563' : colors.gray }]}>Waste Value:</Text>
                             <Text style={[styles.wasteValue, { fontFamily: FONT.bold }]}>{item.wasteValue}</Text>
                         </View>
                     </View>
@@ -68,10 +88,8 @@ const WasteAnalysisCard: React.FC<WasteAnalysisCardProps> = ({
 const styles = StyleSheet.create({
     container: {
         marginHorizontal: wp(1),
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(4),
-        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 2,
@@ -102,7 +120,6 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp(4.5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
     },
     headerRight: {
         alignItems: 'flex-end',
@@ -110,7 +127,6 @@ const styles = StyleSheet.create({
     totalLabel: {
         fontSize: wp(3.2),
         fontFamily: FONT.regular,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
     },
     totalValue: {
@@ -121,16 +137,13 @@ const styles = StyleSheet.create({
     wasteItem: {
         marginBottom: hp(3),
         paddingBottom: hp(2),
-        backgroundColor: '#FFFBF5',
         borderWidth: 1,
-        borderColor: '#FFEDD5',
         borderRadius: wp(2.5),
         padding: wp(4),
     },
     itemName: {
         fontSize: wp(4),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(1.5),
     },
     itemDetails: {
@@ -144,12 +157,10 @@ const styles = StyleSheet.create({
     detailLabel: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: '#4B5563',
     },
     detailValue: {
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.brown,
     },
     wastedValue: {
         fontSize: wp(3.5),
