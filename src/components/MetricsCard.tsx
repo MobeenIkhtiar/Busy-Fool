@@ -45,6 +45,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 3.84,
         elevation: 5,
+        marginHorizontal: wp(1),
     },
     iconContainer: {
         width: wp(12),

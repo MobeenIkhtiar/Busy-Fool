@@ -55,6 +55,7 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 8,
         elevation: 2,
+        marginHorizontal: wp(1),
     },
     cardLabel: {
         fontSize: wp(3),

@@ -420,7 +420,7 @@ const styles = StyleSheet.create({
     textInput: {
         height: hp(6),
         borderWidth: 1,
-        borderColor: '#FFD700',
+        borderColor: COLORS.brown,
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
         backgroundColor: '#F5F5F5',
@@ -438,7 +438,7 @@ const styles = StyleSheet.create({
     dropdownContainer: {
         height: hp(6),
         borderWidth: 1,
-        borderColor: '#FFD700',
+        borderColor: COLORS.brown,
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
         backgroundColor: '#F5F5F5',

@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { StyleSheet } from 'react-native'
+import { StyleSheet, StatusBar } from 'react-native'
 import React from 'react'
 import AppNavigator from './src/navigation/AppNavigator';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 const App = () => {
   return (
     <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
       <AppNavigator />
     </SafeAreaView>
   )

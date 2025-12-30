@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, Alert, ActivityIndicator, View } from 'react-native';
 import * as Animatable from 'react-native-animatable';
+import LinearGradient from 'react-native-linear-gradient';
 import CustomInput from '../../../components/CustomInput';
 import CustomButton from '../../../components/CustomButton';
 import { COLORS, FONT, wp, hp } from '../../../constants/StyleGuide';
@@ -46,19 +47,26 @@ const Login: React.FC = () => {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         >
             <ScrollView contentContainerStyle={{ flexGrow: 1 }} keyboardShouldPersistTaps="handled">
-                <Animatable.View
-                    animation="fadeInDown"
-                    duration={900}
-                    style={styles.header}
+                <LinearGradient
+                    colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 1}}
+                    style={styles.gradient}
                 >
-                    <Text style={styles.welcome}>Welcome back</Text>
-                    <Animatable.Text animation="bounceIn" delay={300} style={styles.wave}>👋</Animatable.Text>
-                    <Text style={styles.subtitle}>Let’s get back to making your{`\n`}menu more profitable.</Text>
-                    <Text style={styles.accountText}>Don't have an account?</Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                        <Text style={styles.createAccount}>Create one now</Text>
-                    </TouchableOpacity>
-                </Animatable.View>
+                    <Animatable.View
+                        animation="fadeInDown"
+                        duration={900}
+                        style={styles.header}
+                    >
+                        <Text style={styles.welcome}>Welcome back</Text>
+                        <Animatable.Text animation="bounceIn" delay={300} style={styles.wave}>👋</Animatable.Text>
+                        <Text style={styles.subtitle}>Let's get back to making your{`\n`}menu more profitable.</Text>
+                        <Text style={styles.accountText}>Don't have an account?</Text>
+                        <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                            <Text style={styles.createAccount}>Create one now</Text>
+                        </TouchableOpacity>
+                    </Animatable.View>
+                </LinearGradient>
 
                 <Animatable.View
                     animation="fadeInUp"
@@ -100,10 +108,11 @@ const Login: React.FC = () => {
 export default Login;
 
 const styles = StyleSheet.create({
-    header: {
-        backgroundColor: COLORS.brown,
+    gradient: {
         borderBottomLeftRadius: wp(8),
         borderBottomRightRadius: wp(8),
+    },
+    header: {
         paddingTop: hp(7),
         paddingBottom: hp(4.5),
         paddingHorizontal: wp(6),
@@ -145,7 +154,7 @@ const styles = StyleSheet.create({
         paddingTop: hp(4),
     },
     loginTitle: {
-        color: '#7B4A22',
+        color: COLORS.brown,
         fontFamily: FONT.bold,
         fontSize: wp(7),
         marginBottom: hp(3),

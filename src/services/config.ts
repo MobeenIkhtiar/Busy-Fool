@@ -1,6 +1,6 @@
 export const API_CONFIG = {
     // Base URL - Change this to your actual API URL
-    BASE_URL: 'https://busy-fool-backend-1-0.onrender.com',
+    BASE_URL: 'https://busy-fool-backend-1mwl.onrender.com/',
 
     // Timeout settings
     TIMEOUT: 10000,

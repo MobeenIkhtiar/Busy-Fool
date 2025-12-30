@@ -104,6 +104,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: wp(1),
         elevation: 3,
+        marginHorizontal: wp(1),
     },
     header: {
         flexDirection: 'row',
@@ -145,7 +146,7 @@ const styles = StyleSheet.create({
     categoryTag: {
         alignSelf: 'flex-start',
         borderWidth: 1,
-        borderColor: '#FBD44C',
+        borderColor: COLORS.brown,
         paddingHorizontal: wp(3),
         paddingVertical: hp(0.5),
         borderRadius: wp(1.5),
@@ -154,7 +155,7 @@ const styles = StyleSheet.create({
     categoryText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: '#B4540A',
+        color: COLORS.brown,
     },
     detailsGrid: {
         gap: hp(1.5),

@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
         padding: wp(3),
         marginRight: wp(3),
         borderWidth: 1,
-        borderColor: COLORS.lightWhite
+        borderColor: COLORS.lightWhite,
 
     },
     iconContainer: {

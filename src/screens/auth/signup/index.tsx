@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { StyleSheet, Text, TouchableOpacity, KeyboardAvoidingView, Platform, ScrollView, View, Alert } from 'react-native';
 import * as Animatable from 'react-native-animatable';
+import LinearGradient from 'react-native-linear-gradient';
 import CustomInput from '../../../components/CustomInput';
 import CustomButton from '../../../components/CustomButton';
 import { COLORS, FONT, wp, hp } from '../../../constants/StyleGuide';
@@ -128,18 +129,25 @@ const Signup: React.FC = () => {
                 keyboardShouldPersistTaps="handled"
                 showsVerticalScrollIndicator={false}
             >
-                <Animatable.View
-                    animation="fadeInDown"
-                    duration={900}
-                    style={styles.header}
+                <LinearGradient
+                    colors={[COLORS.gradientStart, COLORS.gradientEnd]}
+                    start={{x: 0, y: 0}}
+                    end={{x: 1, y: 1}}
+                    style={styles.gradient}
                 >
-                    <Text style={styles.welcome}>Welcome to{`\n`}Busy Fool <Text style={styles.coffee}>☕️</Text></Text>
-                    <Text style={styles.subtitle}>Track your margins. Own your{`\n`}menu. Make every latte count.</Text>
-                    <Text style={styles.accountText}>Already have an account?</Text>
-                    <TouchableOpacity onPress={() => navigation.goBack()}>
-                        <Text style={styles.loginInstead}>Login instead</Text>
-                    </TouchableOpacity>
-                </Animatable.View>
+                    <Animatable.View
+                        animation="fadeInDown"
+                        duration={900}
+                        style={styles.header}
+                    >
+                        <Text style={styles.welcome}>Welcome to{`\n`}Busy Fool <Text style={styles.coffee}>☕️</Text></Text>
+                        <Text style={styles.subtitle}>Track your margins. Own your{`\n`}menu. Make every latte count.</Text>
+                        <Text style={styles.accountText}>Already have an account?</Text>
+                        <TouchableOpacity onPress={() => navigation.goBack()}>
+                            <Text style={styles.loginInstead}>Login instead</Text>
+                        </TouchableOpacity>
+                    </Animatable.View>
+                </LinearGradient>
 
                 <View style={{ flex: 1, justifyContent: 'flex-start' }}>
                     <Animatable.View
@@ -222,10 +230,11 @@ const Signup: React.FC = () => {
 export default Signup;
 
 const styles = StyleSheet.create({
-    header: {
-        backgroundColor: '#7B4A22',
+    gradient: {
         borderBottomLeftRadius: wp(8),
         borderBottomRightRadius: wp(8),
+    },
+    header: {
         paddingTop: hp(7),
         paddingBottom: hp(4.5),
         paddingHorizontal: wp(6),
@@ -267,7 +276,7 @@ const styles = StyleSheet.create({
         paddingTop: hp(4),
     },
     signupTitle: {
-        color: '#7B4A22',
+        color: COLORS.brown,
         fontFamily: FONT.bold,
         fontSize: wp(7),
         marginBottom: hp(3),
