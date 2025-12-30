@@ -11,7 +11,8 @@ import {
     KeyboardAvoidingView,
     Platform,
 } from 'react-native';
-import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
+import { FONT, wp, hp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
 
 interface AddIngredientModalProps {
@@ -42,6 +43,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
     onClose,
     onSubmit,
 }) => {
+    const { colors } = useTheme();
     const [formData, setFormData] = useState<IngredientFormData>({
         name: '',
         category: '',
@@ -147,20 +149,22 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
         error?: string
     ) => (
         <View style={styles.inputContainer}>
-            <Text style={styles.label}>
-                {label}{required && <Text style={styles.required}>*</Text>}
+            <Text style={[styles.label, { color: colors.brown }]}>
+                {label}{required && <Text style={[styles.required, { color: colors.red }]}>*</Text>}
             </Text>
             <TouchableOpacity
                 style={[
                     styles.dropdownContainer,
-                    error && styles.inputError
+                    { borderColor: colors.brown, backgroundColor: '#F5F5F5' },
+                    error && [styles.inputError, { borderColor: colors.red }]
                 ]}
                 onPress={onToggle}
                 activeOpacity={0.7}
             >
                 <Text style={[
                     styles.dropdownText,
-                    value === '' && styles.placeholderText
+                    { color: colors.black },
+                    value === '' && [styles.placeholderText, { color: colors.gray }]
                 ]}>
                     {value || `Select ${label.toLowerCase()}`}
                 </Text>
@@ -170,12 +174,12 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                         styles.dropdownIcon,
                         isOpen && styles.dropdownIconRotated
                     ]}
-                    tintColor={COLORS.gray}
+                    tintColor={colors.gray}
                 />
             </TouchableOpacity>
 
             {isOpen && (
-                <View style={styles.dropdownList}>
+                <View style={[styles.dropdownList, { backgroundColor: colors.white, borderColor: colors.lightgray, shadowColor: colors.black }]}>
                     <ScrollView style={styles.dropdownScroll} showsVerticalScrollIndicator={false}>
                         {options.map((option, index) => (
                             <TouchableOpacity
@@ -186,7 +190,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                     onToggle();
                                 }}
                             >
-                                <Text style={styles.dropdownItemText}>{option}</Text>
+                                <Text style={[styles.dropdownItemText, { color: colors.black }]}>{option}</Text>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
@@ -194,7 +198,7 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
             )}
 
             {error && (
-                <Text style={styles.errorText}>{error}</Text>
+                <Text style={[styles.errorText, { color: colors.red }]}>{error}</Text>
             )}
         </View>
     );
@@ -210,15 +214,15 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                 style={styles.modalOverlay}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
-                <View style={styles.modalContainer}>
+                <View style={[styles.modalContainer, { backgroundColor: colors.primary }]}>
                     <View style={styles.modalContent}>
                         {/* Header */}
                         <View style={styles.header}>
                             <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                                <Text style={styles.closeButtonText}>×</Text>
+                                <Text style={[styles.closeButtonText, { color: colors.black }]}>×</Text>
                             </TouchableOpacity>
-                            <Text style={styles.title}>Add New Ingredient</Text>
-                            <Text style={styles.subtitle}>Add a new ingredient with waste-aware costing</Text>
+                            <Text style={[styles.title, { color: colors.brown }]}>Add New Ingredient</Text>
+                            <Text style={[styles.subtitle, { color: colors.black }]}>Add a new ingredient with waste-aware costing</Text>
 
                         </View>
 
@@ -226,21 +230,22 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                         <ScrollView contentContainerStyle={styles.formContainer} showsVerticalScrollIndicator={false}>
                             {/* Name */}
                             <View style={styles.inputContainer}>
-                                <Text style={styles.label}>
-                                    Name<Text style={styles.required}>*</Text>
+                                <Text style={[styles.label, { color: colors.brown }]}>
+                                    Name<Text style={[styles.required, { color: colors.red }]}>*</Text>
                                 </Text>
                                 <TextInput
                                     style={[
                                         styles.textInput,
-                                        validationErrors.name && styles.inputError
+                                        { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black },
+                                        validationErrors.name && [styles.inputError, { borderColor: colors.red }]
                                     ]}
                                     placeholder="e.g., Oat Milk"
-                                    placeholderTextColor={COLORS.gray}
+                                    placeholderTextColor={colors.gray}
                                     value={formData.name}
                                     onChangeText={(value) => handleInputChange('name', value)}
                                 />
                                 {validationErrors.name && (
-                                    <Text style={styles.errorText}>{validationErrors.name}</Text>
+                                    <Text style={[styles.errorText, { color: colors.red }]}>{validationErrors.name}</Text>
                                 )}
                             </View>
 
@@ -269,11 +274,11 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                     )}
                                 </View>
                                 <View style={[styles.inputContainer, styles.halfWidth]}>
-                                    <Text style={styles.label}>Package Size</Text>
+                                    <Text style={[styles.label, { color: colors.brown }]}>Package Size</Text>
                                     <TextInput
-                                        style={styles.textInput}
+                                        style={[styles.textInput, { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black }]}
                                         placeholder="1"
-                                        placeholderTextColor={COLORS.gray}
+                                        placeholderTextColor={colors.gray}
                                         value={formData.packageSize}
                                         onChangeText={(value) => handleInputChange('packageSize', value)}
                                         keyboardType="numeric"
@@ -283,32 +288,33 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
 
                             {/* Purchase Price */}
                             <View style={styles.inputContainer}>
-                                <Text style={styles.label}>
-                                    Purchase Price ($)<Text style={styles.required}>*</Text>
+                                <Text style={[styles.label, { color: colors.brown }]}>
+                                    Purchase Price ($)<Text style={[styles.required, { color: colors.red }]}>*</Text>
                                 </Text>
                                 <TextInput
                                     style={[
                                         styles.textInput,
-                                        validationErrors.purchasePrice && styles.inputError
+                                        { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black },
+                                        validationErrors.purchasePrice && [styles.inputError, { borderColor: colors.red }]
                                     ]}
                                     placeholder="0.00"
-                                    placeholderTextColor={COLORS.gray}
+                                    placeholderTextColor={colors.gray}
                                     value={formData.purchasePrice}
                                     onChangeText={(value) => handleInputChange('purchasePrice', value)}
                                     keyboardType="numeric"
                                 />
                                 {validationErrors.purchasePrice && (
-                                    <Text style={styles.errorText}>{validationErrors.purchasePrice}</Text>
+                                    <Text style={[styles.errorText, { color: colors.red }]}>{validationErrors.purchasePrice}</Text>
                                 )}
                             </View>
 
                             {/* Waste Percentage */}
                             <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Waste %</Text>
+                                <Text style={[styles.label, { color: colors.brown }]}>Waste %</Text>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black }]}
                                     placeholder="5"
-                                    placeholderTextColor={COLORS.gray}
+                                    placeholderTextColor={colors.gray}
                                     value={formData.wastePercentage}
                                     onChangeText={(value) => handleInputChange('wastePercentage', value)}
                                     keyboardType="numeric"
@@ -327,11 +333,11 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
 
                             {/* Current Stock Level */}
                             <View style={styles.inputContainer}>
-                                <Text style={styles.label}>Current Stock Level</Text>
+                                <Text style={[styles.label, { color: colors.brown }]}>Current Stock Level</Text>
                                 <TextInput
-                                    style={styles.textInput}
+                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: '#F5F5F5', color: colors.black }]}
                                     placeholder="0"
-                                    placeholderTextColor={COLORS.gray}
+                                    placeholderTextColor={colors.gray}
                                     value={formData.currentStockLevel}
                                     onChangeText={(value) => handleInputChange('currentStockLevel', value)}
                                     keyboardType="numeric"
@@ -340,12 +346,12 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                         </ScrollView>
 
                         {/* Action Buttons */}
-                        <View style={styles.actionButtons}>
-                            <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-                                <Text style={styles.cancelButtonText}>Cancel</Text>
+                        <View style={[styles.actionButtons, { borderTopColor: colors.lightgray }]}>
+                            <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]} onPress={onClose}>
+                                <Text style={[styles.cancelButtonText, { color: '#000000' }]}>Cancel</Text>
                             </TouchableOpacity>
-                            <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-                                <Text style={styles.submitButtonText}>Add Ingredient</Text>
+                            <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.brown }]} onPress={handleSubmit}>
+                                <Text style={[styles.submitButtonText, { color: colors.white }]}>Add Ingredient</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -363,7 +369,6 @@ const styles = StyleSheet.create({
     },
     modalContainer: {
         flex: 1,
-        backgroundColor: COLORS.primary,
         borderRadius: wp(3),
         paddingTop: hp(4),
         paddingBottom: hp(5),
@@ -379,14 +384,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp(5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
         textAlign: 'center',
     },
     subtitle: {
         fontSize: wp(3),
         fontFamily: FONT.regular,
-        color: COLORS.black,
         marginBottom: hp(1),
         textAlign: 'center'
     },
@@ -397,7 +400,6 @@ const styles = StyleSheet.create({
     },
     closeButtonText: {
         fontSize: wp(6),
-        color: COLORS.black,
         fontFamily: FONT.bold,
     },
     formContainer: {
@@ -411,22 +413,18 @@ const styles = StyleSheet.create({
     label: {
         fontSize: wp(3.5),
         fontFamily: FONT.semiBold,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
     },
     required: {
-        color: COLORS.red,
+        // color is set dynamically
     },
     textInput: {
         height: hp(6),
         borderWidth: 1,
-        borderColor: COLORS.brown,
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
-        backgroundColor: '#F5F5F5',
         fontFamily: FONT.regular,
         fontSize: wp(3.5),
-        color: COLORS.black,
     },
     rowContainer: {
         flexDirection: 'row',
@@ -438,10 +436,8 @@ const styles = StyleSheet.create({
     dropdownContainer: {
         height: hp(6),
         borderWidth: 1,
-        borderColor: COLORS.brown,
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
-        backgroundColor: '#F5F5F5',
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -449,11 +445,10 @@ const styles = StyleSheet.create({
     dropdownText: {
         fontFamily: FONT.regular,
         fontSize: wp(3.5),
-        color: COLORS.black,
         flex: 1,
     },
     placeholderText: {
-        color: COLORS.gray,
+        // color is set dynamically
     },
     dropdownIcon: {
         width: wp(4),
@@ -469,14 +464,11 @@ const styles = StyleSheet.create({
         top: hp(6.5),
         left: 0,
         right: 0,
-        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.lightgray,
         borderRadius: wp(2),
         maxHeight: hp(20),
         zIndex: 1000,
         elevation: 5,
-        shadowColor: COLORS.black,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
         shadowRadius: 3.84,
@@ -491,7 +483,6 @@ const styles = StyleSheet.create({
     dropdownItemText: {
         fontFamily: FONT.regular,
         fontSize: wp(3.5),
-        color: COLORS.black,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -499,14 +490,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(5),
         paddingVertical: hp(3),
         borderTopWidth: .5,
-        borderTopColor: COLORS.lightgray,
     },
     cancelButton: {
         flex: 1,
         paddingVertical: hp(1.5),
-        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.lightgray,
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -514,12 +502,10 @@ const styles = StyleSheet.create({
     cancelButtonText: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     submitButton: {
         flex: 1,
         paddingVertical: hp(1.5),
-        backgroundColor: COLORS.brown,
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -527,15 +513,13 @@ const styles = StyleSheet.create({
     submitButtonText: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: COLORS.white,
     },
     inputError: {
-        borderColor: COLORS.red,
+        // borderColor is set dynamically
     },
     errorText: {
         fontSize: wp(3),
         fontFamily: FONT.regular,
-        color: COLORS.red,
         marginTop: hp(0.5),
         marginLeft: wp(1),
     },

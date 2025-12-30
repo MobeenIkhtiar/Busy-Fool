@@ -1,7 +1,8 @@
 import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import React, { useState } from 'react'
 import { icons } from '../../../constants/icons'
-import { COLORS, FONT, hp, wp } from '../../../constants/StyleGuide'
+import { FONT, hp, wp } from '../../../constants/StyleGuide'
+import { useTheme } from '../../../context/ThemeContext'
 import TopBar from '../../../components/TopBar'
 import IngredientItem from '../../../components/IngredientItem'
 import MetricCard from '../../../components/MetricsCard'
@@ -10,6 +11,7 @@ import { useNavigation } from '@react-navigation/native'
 
 const IngredientsScreen = () => {
     const navigation = useNavigation();
+    const { colors } = useTheme();
     // Sample ingredient data
     const sampleIngredients = [
         {
@@ -145,7 +147,7 @@ const IngredientsScreen = () => {
     const closeModal = () => setIsModalVisible(false);
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.primary }]}>
             <TopBar navigation={navigation as any} />
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -153,18 +155,18 @@ const IngredientsScreen = () => {
                 {/* Header Section */}
                 <View style={styles.headerSection}>
                     <View style={styles.titleContainer}>
-                        <Text style={styles.title}>Ingredients Management</Text>
-                        <Text style={styles.subtitle}>optimize your coffee shop's inventory with ease</Text>
+                        <Text style={[styles.title, { color: colors.brown }]}>Ingredients Management</Text>
+                        <Text style={[styles.subtitle, { color: colors.black }]}>optimize your coffee shop's inventory with ease</Text>
                     </View>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.filterButton}>
-                            <Image source={icons.export} style={styles.buttonIcon} tintColor={COLORS.black} />
-                            <Text style={styles.filterButtonText}>Export</Text>
+                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
+                            <Image source={icons.export} style={[styles.buttonIcon, { tintColor: '#000000' }]} />
+                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Export</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.addButton} onPress={openModal}>
-                            <Image source={icons.plus} style={styles.buttonIcon} />
-                            <Text style={styles.addButtonText}>Add Ingredients</Text>
+                        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.brown }]} onPress={openModal}>
+                            <Image source={icons.plus} style={[styles.buttonIcon, { tintColor: colors.white }]} />
+                            <Text style={[styles.addButtonText, { color: colors.white }]}>Add Ingredients</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -210,7 +212,6 @@ export default IngredientsScreen
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.primary,
         paddingTop: hp(2),
         paddingHorizontal: wp(4),
     },
@@ -226,13 +227,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp(5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
     },
     subtitle: {
         fontSize: wp(3),
         fontFamily: FONT.regular,
-        color: COLORS.black,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -241,9 +240,7 @@ const styles = StyleSheet.create({
     filterButton: {
         flex: 1,
         paddingVertical: hp(1),
-        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.lightgray,
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -252,13 +249,11 @@ const styles = StyleSheet.create({
     filterButtonText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: '#374151',
         marginLeft: wp(4),
     },
     addButton: {
         flex: 1,
         paddingVertical: hp(1.5),
-        backgroundColor: COLORS.brown,
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -267,14 +262,12 @@ const styles = StyleSheet.create({
     addButtonText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.white,
         marginLeft: wp(4),
     },
     buttonIcon: {
         width: wp(3.5),
         height: wp(3.5),
         resizeMode: 'contain',
-        tintColor: COLORS.white,
     },
     ingredientsList: {
         marginTop: hp(2),

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View, ScrollView } from 'react-native'
 import React, { useState } from 'react'
-import { COLORS, FONT, wp, hp } from '../../../constants/StyleGuide'
+import { FONT, wp, hp } from '../../../constants/StyleGuide'
+import { useTheme } from '../../../context/ThemeContext'
 import { icons } from '../../../constants/icons'
 import AnalyticsMetricCard from '../../../components/AnalyticsMetricCard'
 import TimePeriodSelector from '../../../components/TimePeriodSelector'
@@ -11,57 +12,7 @@ import MissingRecipeDetectionCard from '../../../components/MissingRecipeDetecti
 import TopBar from '../../../components/TopBar'
 import { useNavigation } from '@react-navigation/native'
 
-// Move data to the top
-const metricsData = [
-    {
-        icon: icons.dollar,
-        label: 'Total Revenue',
-        value: '£8,647',
-        iconColor: COLORS.blue,
-        iconBackground: COLORS.lightBlue,
-        valueColor: COLORS.blue,
-    },
-    {
-        icon: icons.box,
-        label: 'Total Costs',
-        value: '£6,234',
-        iconColor: '#EA580B',
-        iconBackground: COLORS.lightOrange,
-        valueColor: COLORS.orange,
-    },
-    {
-        icon: icons.profit,
-        label: 'True Profit',
-        value: '£2,413',
-        iconColor: COLORS.green,
-        iconBackground: COLORS.lightGreen,
-        valueColor: COLORS.green,
-    },
-    {
-        icon: icons.percent,
-        label: 'Avg Margin',
-        value: '27.9%',
-        iconColor: COLORS.purple,
-        iconBackground: COLORS.lightPurple,
-        valueColor: COLORS.purple,
-    },
-    {
-        icon: icons.delete,
-        label: 'Waste Value',
-        value: '£184',
-        iconColor: COLORS.red,
-        iconBackground: COLORS.lightRed,
-        valueColor: COLORS.red,
-    },
-    {
-        icon: icons.exclamation,
-        label: 'Lost Opportunity',
-        value: '£312',
-        iconColor: '#CA8A03',
-        iconBackground: COLORS.lightOrange,
-        valueColor: '#CA8A03',
-    },
-];
+// Move data to the top - will be created inside component to use theme colors
 
 // Explicitly type trend for moneyLosersData
 const moneyLosersData: {
@@ -163,24 +114,92 @@ const missingRecipeData = [
     },
 ];
 
-const AnalyticsScreen = ({
-    metricsDataProp = metricsData,
+interface AnalyticsScreenProps {
+    metricsDataProp?: Array<{
+        icon: any;
+        label: string;
+        value: string;
+        iconColor: string;
+        iconBackground: string;
+        valueColor: string;
+    }>;
+    moneyLosersDataProp?: typeof moneyLosersData;
+    topPerformersDataProp?: typeof topPerformersData;
+}
+
+const AnalyticsScreen: React.FC<AnalyticsScreenProps> = ({
+    metricsDataProp,
     moneyLosersDataProp = moneyLosersData,
     topPerformersDataProp = topPerformersData,
 }) => {
     const navigation = useNavigation();
+    const { colors } = useTheme();
     const [selectedPeriod, setSelectedPeriod] = useState<string>('Today');
     const [selectedCategory, setSelectedCategory] = useState<string>('All Products');
 
+    // Create metrics data with theme colors
+    const metricsData = [
+        {
+            icon: icons.dollar,
+            label: 'Total Revenue',
+            value: '£8,647',
+            iconColor: colors.blue,
+            iconBackground: colors.lightBlue,
+            valueColor: colors.blue,
+        },
+        {
+            icon: icons.box,
+            label: 'Total Costs',
+            value: '£6,234',
+            iconColor: '#EA580B',
+            iconBackground: colors.lightOrange,
+            valueColor: colors.orange,
+        },
+        {
+            icon: icons.profit,
+            label: 'True Profit',
+            value: '£2,413',
+            iconColor: colors.green,
+            iconBackground: colors.lightGreen,
+            valueColor: colors.green,
+        },
+        {
+            icon: icons.percent,
+            label: 'Avg Margin',
+            value: '27.9%',
+            iconColor: colors.purple,
+            iconBackground: colors.lightPurple,
+            valueColor: colors.purple,
+        },
+        {
+            icon: icons.delete,
+            label: 'Waste Value',
+            value: '£184',
+            iconColor: colors.red,
+            iconBackground: colors.lightRed,
+            valueColor: colors.red,
+        },
+        {
+            icon: icons.exclamation,
+            label: 'Lost Opportunity',
+            value: '£312',
+            iconColor: '#CA8A03',
+            iconBackground: colors.lightOrange,
+            valueColor: '#CA8A03',
+        },
+    ];
+
+    const finalMetricsData = metricsDataProp || metricsData;
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.primary }]}>
             <TopBar navigation={navigation as any} />
             <ScrollView showsVerticalScrollIndicator={false}>
                 <View style={styles.content}>
                     {/* Header */}
                     <View style={styles.header}>
-                        <Text style={styles.title}>Analytics Dashboard</Text>
-                        <Text style={styles.subtitle}>
+                        <Text style={[styles.title, { color: colors.brown }]}>Analytics Dashboard</Text>
+                        <Text style={[styles.subtitle, { color: colors.lightgray }]}>
                             Deep insights into your coffee shop's true performance
                         </Text>
                     </View>
@@ -199,7 +218,7 @@ const AnalyticsScreen = ({
 
                     {/* Metrics Grid */}
                     <View style={styles.metricsGrid}>
-                        {metricsDataProp.map((metric, index) => (
+                        {finalMetricsData.map((metric: any, index: number) => (
                             <View key={index} style={styles.metricCardWrapper}>
                                 <AnalyticsMetricCard
                                     icon={metric.icon}
@@ -247,7 +266,6 @@ export default AnalyticsScreen
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.primary,
         paddingTop: hp(2),
         paddingHorizontal: wp(4),
     },
@@ -261,13 +279,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp(6),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(1),
     },
     subtitle: {
         fontSize: wp(3.8),
         fontFamily: FONT.regular,
-        color: COLORS.lightgray,
         lineHeight: hp(2.5),
     },
     metricsGrid: {
@@ -275,6 +291,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         flexWrap: 'wrap',
         justifyContent: 'space-between',
+        marginHorizontal: wp(1),
     },
     metricCardWrapper: {
         width: '48%',

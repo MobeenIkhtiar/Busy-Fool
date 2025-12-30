@@ -179,9 +179,9 @@ const ProductPerformanceSection: React.FC<ProductPerformanceSectionProps> = ({
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.primary,
         // paddingHorizontal: wp(5),
         paddingTop: hp(2),
+        
     },
     section: {
         marginBottom: hp(3),
@@ -197,6 +197,7 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.1,
         shadowRadius: 2,
         elevation: 2,
+      marginHorizontal: wp(1),
     },
     sectionHeader: {
         flexDirection: 'row',

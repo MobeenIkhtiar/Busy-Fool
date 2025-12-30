@@ -6,12 +6,14 @@ import UrgentAlertCard from '../../../components/UrgentAlertCard'
 import KPICard from '../../../components/KPICard'
 import SearchFilterSection from '../../../components/SearchFilterSection'
 import { useNavigation } from '@react-navigation/native';
-import { COLORS, hp, wp, FONT } from '../../../constants/StyleGuide';
+import { hp, wp, FONT } from '../../../constants/StyleGuide';
+import { useTheme } from '../../../context/ThemeContext';
 import { products } from '../../../constants/Data';
 import { icons } from '../../../constants/icons'
 
 const ProductScreen = () => {
     const navigation = useNavigation();
+    const { colors } = useTheme();
     const [searchValue, setSearchValue] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('Coffee');
     const [statusFilter, setStatusFilter] = useState('Profitable');
@@ -33,7 +35,7 @@ const ProductScreen = () => {
                 value: "5",
                 contextualText: "+2 this week",
                 backgroundColor: "#ECE8E5",
-                valueColor: COLORS.brown
+                valueColor: colors.brown
             },
             {
                 icon: icons.profit,
@@ -42,7 +44,7 @@ const ProductScreen = () => {
                 value: "3",
                 contextualText: "+1 today",
                 backgroundColor: '#EDFEF4',
-                valueColor: COLORS.green
+                valueColor: colors.green
             },
             {
                 icon: icons.exclamation,
@@ -51,7 +53,7 @@ const ProductScreen = () => {
                 value: "2",
                 contextualText: "Fix these!",
                 backgroundColor: "#FEF2F7",
-                valueColor: COLORS.red
+                valueColor: colors.red
             },
             {
                 icon: icons.chart,
@@ -60,7 +62,7 @@ const ProductScreen = () => {
                 value: "32.1%",
                 contextualText: "+2.3% vs\nyesterday",
                 backgroundColor: "#EEF3FF",
-                valueColor: COLORS.blue
+                valueColor: colors.blue
             }
         ];
 
@@ -88,7 +90,7 @@ const ProductScreen = () => {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.primary }]}>
             <TopBar navigation={navigation as any} />
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -97,18 +99,18 @@ const ProductScreen = () => {
                 {/* Header Section */}
                 <View style={styles.headerSection}>
                     <View style={styles.titleContainer}>
-                        <Text style={styles.title}>Products</Text>
-                        <Text style={styles.subtitle}>Smart margin tracking for your coffee shop.</Text>
+                        <Text style={[styles.title, { color: colors.brown }]}>Products</Text>
+                        <Text style={[styles.subtitle, { color: colors.black }]}>Smart margin tracking for your coffee shop.</Text>
                     </View>
 
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={styles.filterButton}>
-                            <Image source={icons.filter} style={styles.buttonIcon} tintColor={COLORS.black} />
-                            <Text style={styles.filterButtonText}>Filters</Text>
+                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
+                            <Image source={icons.filter} style={[styles.buttonIcon, { tintColor: colors.black }]} />
+                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Filters</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.addButton}>
-                            <Image source={icons.plus} style={styles.buttonIcon} />
-                            <Text style={styles.addButtonText}>Add Product</Text>
+                        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.brown }]}>
+                            <Image source={icons.plus} style={[styles.buttonIcon, { tintColor: colors.white }]} />
+                            <Text style={[styles.addButtonText, { color: colors.white }]}>Add Product</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -179,7 +181,6 @@ export default ProductScreen
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.primary,
         paddingTop: hp(2),
         paddingHorizontal: wp(4),
     },
@@ -195,13 +196,11 @@ const styles = StyleSheet.create({
     title: {
         fontSize: wp(6),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
     },
     subtitle: {
         fontSize: wp(3.2),
         fontFamily: FONT.regular,
-        color: COLORS.black,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -210,9 +209,7 @@ const styles = StyleSheet.create({
     filterButton: {
         flex: 1,
         paddingVertical: hp(1),
-        backgroundColor: COLORS.white,
         borderWidth: 1,
-        borderColor: COLORS.lightgray,
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -221,13 +218,11 @@ const styles = StyleSheet.create({
     filterButtonText: {
         fontSize: wp(4),
         fontFamily: FONT.medium,
-        color: '#374151',
         marginLeft: wp(4),
     },
     addButton: {
         flex: 1,
         paddingVertical: hp(1.5),
-        backgroundColor: COLORS.brown,
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',
@@ -236,14 +231,12 @@ const styles = StyleSheet.create({
     addButtonText: {
         fontSize: wp(4),
         fontFamily: FONT.medium,
-        color: COLORS.white,
         marginLeft: wp(4),
     },
     buttonIcon: {
         width: wp(4),
         height: wp(4),
         resizeMode: 'contain',
-        tintColor: COLORS.white,
     },
     kpiSection: {
         marginBottom: hp(3),

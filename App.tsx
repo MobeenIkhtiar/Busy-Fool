@@ -11,7 +11,7 @@ const AppContent = () => {
   
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle={theme === 'light' ? 'dark-content' : 'light-content'} />
+      <StatusBar barStyle={theme === 'light' ? 'dark-content' : 'dark-content'} />
       <AppNavigator />
     </SafeAreaView>
   )

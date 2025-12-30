@@ -77,6 +77,7 @@ const styles = StyleSheet.create({
         shadowRadius: 3.84,
         elevation: 5,
         marginVertical: hp(1),
+        marginHorizontal: wp(1),
     },
     header: {
         flexDirection: 'row',

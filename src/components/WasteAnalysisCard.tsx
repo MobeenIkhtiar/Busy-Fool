@@ -67,6 +67,7 @@ const WasteAnalysisCard: React.FC<WasteAnalysisCardProps> = ({
 
 const styles = StyleSheet.create({
     container: {
+        marginHorizontal: wp(1),
         backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(4),
