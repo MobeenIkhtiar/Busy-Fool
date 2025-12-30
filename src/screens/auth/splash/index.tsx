@@ -45,8 +45,8 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     logo: {
-        width: wp(50),
-        height: wp(50),
+        width: hp(16),
+        height: hp(16),
         resizeMode: 'contain',
         borderRadius: hp(1.5),
     },

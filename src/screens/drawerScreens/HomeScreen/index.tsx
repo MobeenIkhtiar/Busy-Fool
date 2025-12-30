@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(4),
     },
     scrollContent: {
-        paddingBottom: hp(10),
+        paddingBottom: hp(4),
     },
     headerSection: {
         marginBottom: hp(2),

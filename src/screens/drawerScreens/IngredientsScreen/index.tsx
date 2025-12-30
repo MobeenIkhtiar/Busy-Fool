@@ -1,4 +1,4 @@
-import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert, Platform } from 'react-native'
 import React, { useState } from 'react'
 import { icons } from '../../../constants/icons'
 import { FONT, hp, wp } from '../../../constants/StyleGuide'
@@ -8,6 +8,8 @@ import IngredientItem from '../../../components/IngredientItem'
 import MetricCard from '../../../components/MetricsCard'
 import AddIngredientModal from '../../../components/AddIngredientModal'
 import { useNavigation } from '@react-navigation/native'
+import Ionicons from 'react-native-vector-icons/Ionicons'
+import { pick } from '@react-native-documents/picker'
 
 const IngredientsScreen = () => {
     const navigation = useNavigation();
@@ -146,6 +148,76 @@ const IngredientsScreen = () => {
     const openModal = () => setIsModalVisible(true);
     const closeModal = () => setIsModalVisible(false);
 
+    const handleUploadDoc = async () => {
+        try {
+            const result = await pick({
+                allowMultiSelection: false,
+            });
+
+            if (result && result.length > 0) {
+                const selectedFile = result[0];
+                console.log('Selected file:', {
+                    name: selectedFile.name,
+                    type: selectedFile.type,
+                    size: selectedFile.size,
+                    uri: selectedFile.uri,
+                });
+                
+                // You can process the file here
+                const fileSize = selectedFile.size ? (selectedFile.size / 1024).toFixed(2) : 'Unknown';
+                
+                Alert.alert(
+                    'File Selected',
+                    `File: ${selectedFile.name}\nSize: ${fileSize} KB`,
+                    [
+                        {
+                            text: 'Cancel',
+                            style: 'cancel',
+                            onPress: () => {
+                                console.log('User cancelled file upload');
+                            }
+                        },
+                        {
+                            text: 'OK',
+                            onPress: () => {
+                                handleFileUpload(selectedFile);
+                            }
+                        }
+                    ]
+                );
+            }
+        } catch (err: any) {
+            // Check if user cancelled (error code or message)
+            if (err?.message?.includes('cancel') || err?.code === 'DOCUMENT_PICKER_CANCELED') {
+                // User cancelled the picker
+                console.log('User cancelled document picker');
+            } else {
+                // Handle other errors
+                console.error('Document picker error:', err);
+                Alert.alert('Error', 'Failed to pick document. Please try again.');
+            }
+        }
+    };
+
+    const handleFileUpload = async (file: any) => {
+        console.log('handleFileUpload called with file:', {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            uri: file.uri,
+        });
+        
+        // TODO: Call API here
+        // Example:
+        // try {
+        //     const response = await uploadFile(file);
+        //     console.log('File uploaded successfully:', response);
+        // } catch (error) {
+        //     console.error('File upload error:', error);
+        //     Alert.alert('Error', 'Failed to upload file. Please try again.');
+        // }
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: colors.primary }]}>
             <TopBar navigation={navigation as any} />
@@ -159,14 +231,30 @@ const IngredientsScreen = () => {
                         <Text style={[styles.subtitle, { color: colors.black }]}>optimize your coffee shop's inventory with ease</Text>
                     </View>
 
+                    {/* Row 1: Add Ingredient & Upload Doc */}
+                    <View style={styles.actionButtons}>
+                        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.brown }]} onPress={openModal}>
+                            <Image source={icons.plus} style={[styles.buttonIcon, { tintColor: colors.white }]} />
+                            <Text style={[styles.addButtonText, { color: colors.white }]}>Add Ingredient</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity 
+                            style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}
+                            onPress={handleUploadDoc}
+                        >
+                            <Ionicons name="cloud-upload-outline" size={wp(4)} color="#000000" />
+                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Upload Doc</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    {/* Row 2: Export CSV & Import CSV */}
                     <View style={styles.actionButtons}>
                         <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
                             <Image source={icons.export} style={[styles.buttonIcon, { tintColor: '#000000' }]} />
-                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Export</Text>
+                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Export CSV</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.addButton, { backgroundColor: colors.brown }]} onPress={openModal}>
-                            <Image source={icons.plus} style={[styles.buttonIcon, { tintColor: colors.white }]} />
-                            <Text style={[styles.addButtonText, { color: colors.white }]}>Add Ingredients</Text>
+                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]}>
+                            <Ionicons name="cloud-download-outline" size={wp(4)} color="#000000" />
+                            <Text style={[styles.filterButtonText, { color: '#374151' }]}>Import CSV</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -216,7 +304,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(4),
     },
     scrollContent: {
-        paddingBottom: hp(10)
+        paddingBottom: hp(4),
     },
     headerSection: {
         marginBottom: hp(3),
@@ -236,6 +324,7 @@ const styles = StyleSheet.create({
     actionButtons: {
         flexDirection: 'row',
         gap: wp(3),
+        marginBottom: hp(1.5),
     },
     filterButton: {
         flex: 1,
