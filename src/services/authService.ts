@@ -143,59 +143,58 @@ class AuthService {
         }
     }
 
-    // Update user profile
-    async updateProfile(profileData: UpdateProfileRequest, profilePictureUri?: string): Promise<Profile> {
+    // Upload profile picture separately
+    async uploadProfilePicture(imageUri: string): Promise<Profile> {
         try {
-            let response: AxiosResponse<Profile>;
+            const formData = new FormData();
             
-            // If profile picture is provided, use FormData
-            if (profilePictureUri) {
-                const formData = new FormData();
-                
-                // Append profile picture
-                formData.append('profilePicture', {
-                    uri: profilePictureUri,
-                    type: 'image/jpeg',
-                    name: 'profile_picture.jpg',
-                } as any);
-                
-                // Append other fields
-                if (profileData.name) formData.append('name', profileData.name);
-                // phoneNumber can be null (backend accepts string | null)
-                // For FormData, send empty string if null, backend will handle it
-                if (profileData.phoneNumber !== undefined) {
-                    formData.append('phoneNumber', profileData.phoneNumber || '');
+            // Append profile picture
+            formData.append('profilePicture', {
+                uri: imageUri,
+                type: 'image/jpeg',
+                name: 'profile_picture.jpg',
+            } as any);
+            
+            console.log('Uploading profile picture to:', API_CONFIG.ENDPOINTS.AUTH.UPLOAD_PROFILE_PICTURE);
+            
+            const response = await apiService.post<Profile>(
+                API_CONFIG.ENDPOINTS.AUTH.UPLOAD_PROFILE_PICTURE,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
                 }
-                if (profileData.dateOfBirth) formData.append('dateOfBirth', profileData.dateOfBirth);
-                if (profileData.address) formData.append('address', profileData.address);
-                if (profileData.bio) formData.append('bio', profileData.bio);
-                
-                response = await apiService.patch<Profile>(
-                    API_CONFIG.ENDPOINTS.AUTH.PROFILE,
-                    formData,
-                    {
-                        headers: {
-                            'Content-Type': 'multipart/form-data',
-                        },
-                    }
-                );
-            } else {
-                // No image, use JSON
-                const jsonData: any = {};
-                if (profileData.name) jsonData.name = profileData.name;
-                // phoneNumber can be null (backend accepts string | null)
-                if (profileData.phoneNumber !== undefined) {
-                    jsonData.phoneNumber = profileData.phoneNumber || null;
-                }
-                if (profileData.dateOfBirth) jsonData.dateOfBirth = profileData.dateOfBirth;
-                if (profileData.address) jsonData.address = profileData.address;
-                if (profileData.bio) jsonData.bio = profileData.bio;
-                
-                response = await apiService.patch<Profile>(
-                    API_CONFIG.ENDPOINTS.AUTH.PROFILE,
-                    jsonData
-                );
+            );
+            
+            console.log('UploadProfilePicture response:', response);
+            return response.data;
+        } catch (error: any) {
+            console.error('Error uploading profile picture:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    // Update user profile (without profile picture - use uploadProfilePicture separately)
+    async updateProfile(profileData: UpdateProfileRequest): Promise<Profile> {
+        try {
+            // Use JSON for profile update (without image)
+            const jsonData: any = {};
+            if (profileData.name) jsonData.name = profileData.name;
+            // phoneNumber can be null (backend accepts string | null)
+            if (profileData.phoneNumber !== undefined) {
+                jsonData.phoneNumber = profileData.phoneNumber || null;
             }
+            if (profileData.dateOfBirth) jsonData.dateOfBirth = profileData.dateOfBirth;
+            if (profileData.address) jsonData.address = profileData.address;
+            if (profileData.bio) jsonData.bio = profileData.bio;
+            
+            console.log('Updating profile with data:', jsonData);
+            
+            const response = await apiService.patch<Profile>(
+                API_CONFIG.ENDPOINTS.AUTH.PROFILE,
+                jsonData
+            );
             
             console.log('UpdateProfile response:', response);
             return response.data;

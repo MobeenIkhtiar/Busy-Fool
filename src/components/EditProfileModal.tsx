@@ -11,6 +11,7 @@ import {
     Platform,
     KeyboardAvoidingView,
     Alert,
+    ActivityIndicator,
 } from 'react-native';
 import { launchImageLibrary, launchCamera, ImagePickerResponse, MediaType, ImageLibraryOptions, CameraOptions } from 'react-native-image-picker';
 import { FONT, wp, hp } from '../constants/StyleGuide';
@@ -53,22 +54,38 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
 
     const [profileImageUri, setProfileImageUri] = useState<string | undefined>(initialData?.profileImage);
     const [newImageSelected, setNewImageSelected] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Update form data when initialData changes
+    // Update form data when initialData changes or modal opens
     useEffect(() => {
-        if (initialData) {
-            setFormData({
-                fullName: initialData.fullName || '',
-                phoneNumber: initialData.phoneNumber || '',
-                dateOfBirth: initialData.dateOfBirth || '',
-                address: initialData.address || '',
-                bio: initialData.bio || '',
-                profileImage: initialData.profileImage,
-            });
-            setProfileImageUri(initialData.profileImage);
+        if (visible) {
+            if (initialData) {
+                console.log('EditProfileModal: Updating form with initialData:', initialData);
+                setFormData({
+                    fullName: initialData.fullName || '',
+                    phoneNumber: initialData.phoneNumber || '',
+                    dateOfBirth: initialData.dateOfBirth || '',
+                    address: initialData.address || '',
+                    bio: initialData.bio || '',
+                    profileImage: initialData.profileImage,
+                });
+                setProfileImageUri(initialData.profileImage);
+            } else {
+                // Reset to empty if no initialData
+                setFormData({
+                    fullName: '',
+                    phoneNumber: '',
+                    dateOfBirth: '',
+                    address: '',
+                    bio: '',
+                    profileImage: undefined,
+                });
+                setProfileImageUri(undefined);
+            }
             setNewImageSelected(false);
+            setIsSubmitting(false); // Reset loading state when modal opens
         }
-    }, [initialData]);
+    }, [initialData, visible]);
 
     const handleImagePicker = () => {
         Alert.alert(
@@ -294,7 +311,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         setNewImageSelected(false);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (!formData.fullName.trim()) {
             Alert.alert('Validation Error', 'Full Name is required');
             return;
@@ -352,8 +369,19 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
         console.log('Complete Submit Data:', JSON.stringify(submitData, null, 2));
         console.log('================================================');
         
-        if (onSubmit) {
-            onSubmit(submitData);
+        // Set loading state
+        setIsSubmitting(true);
+        
+        try {
+            if (onSubmit) {
+                await onSubmit(submitData);
+                // On success, modal will be closed by parent, so loading state will reset
+            }
+        } catch (error) {
+            console.error('Error in handleSubmit:', error);
+            // Reset loading state on error so user can try again
+            setIsSubmitting(false);
+            // Error alert is shown by parent component
         }
     };
 
@@ -366,21 +394,40 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
             visible={visible}
             animationType="slide"
             transparent={true}
-            onRequestClose={onClose}
+            onRequestClose={isSubmitting ? undefined : onClose}
         >
             <KeyboardAvoidingView
                 style={styles.modalOverlay}
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             >
                 <View style={[styles.modalContainer, { backgroundColor: colors.primary }]}>
+                    {/* Loading Overlay */}
+                    {isSubmitting && (
+                        <View style={[styles.loadingOverlay, { backgroundColor: 'rgba(0, 0, 0, 0.5)' }]}>
+                            <View style={[styles.loadingContainer, { backgroundColor: colors.primary }]}>
+                                <ActivityIndicator size="large" color={colors.brown} />
+                                <Text style={[styles.loadingText, { color: colors.black }]}>
+                                    {newImageSelected ? 'Uploading image...' : 'Updating profile...'}
+                                </Text>
+                                <Text style={[styles.loadingSubtext, { color: colors.gray }]}>
+                                    Please wait
+                                </Text>
+                            </View>
+                        </View>
+                    )}
                     <ScrollView
                         contentContainerStyle={styles.scrollContent}
                         showsVerticalScrollIndicator={false}
+                        scrollEnabled={!isSubmitting}
                     >
                         {/* Header */}
                         <View style={styles.header}>
                             <Text style={[styles.headerTitle, { color: colors.brown }]}>Edit Profile</Text>
-                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                            <TouchableOpacity 
+                                onPress={onClose} 
+                                style={[styles.closeButton, { opacity: isSubmitting ? 0.5 : 1 }]}
+                                disabled={isSubmitting}
+                            >
                                 <Ionicons name="close" size={wp(6)} color={colors.black} />
                             </TouchableOpacity>
                         </View>
@@ -540,9 +587,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                     {
                                         backgroundColor: theme === 'light' ? colors.white : colors.primary,
                                         borderColor: colors.lightgray,
+                                        opacity: isSubmitting ? 0.5 : 1,
                                     },
                                 ]}
                                 onPress={handleReset}
+                                disabled={isSubmitting}
                             >
                                 <Ionicons name="refresh-outline" size={wp(4.5)} color={colors.black} />
                                 <Text style={[styles.resetButtonText, { color: colors.black }]}>Reset</Text>
@@ -711,6 +760,43 @@ const styles = StyleSheet.create({
         fontFamily: FONT.regular,
         marginTop: hp(0.5),
         fontStyle: 'italic',
+    },
+    loadingOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        justifyContent: 'center',
+        alignItems: 'center',
+        zIndex: 1000,
+    },
+    loadingContainer: {
+        borderRadius: wp(3),
+        padding: wp(6),
+        alignItems: 'center',
+        justifyContent: 'center',
+        minWidth: wp(60),
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
+    },
+    loadingText: {
+        fontSize: wp(4),
+        fontFamily: FONT.semiBold,
+        marginTop: hp(2),
+        textAlign: 'center',
+    },
+    loadingSubtext: {
+        fontSize: wp(3),
+        fontFamily: FONT.regular,
+        marginTop: hp(0.5),
+        textAlign: 'center',
     },
 });
 

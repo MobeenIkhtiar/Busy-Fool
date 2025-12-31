@@ -26,6 +26,7 @@ export const API_CONFIG = {
             CHANGE_PASSWORD: '/auth/change-password',
             ME: '/auth/me',
             PROFILE: '/auth/profile',
+            UPLOAD_PROFILE_PICTURE: '/auth/upload-profile-picture',
         },
         USER: {
             PROFILE: '/user/profile',

@@ -46,7 +46,16 @@ const ProfileScreen = () => {
         }, [])
     );
 
-    const handleEditProfile = () => {
+    const handleEditProfile = async () => {
+        // Refresh profile data before opening modal to ensure we have latest data
+        try {
+            const latestProfile = await authService.getProfile();
+            setProfile(latestProfile);
+            console.log('Profile refreshed before opening edit modal:', latestProfile);
+        } catch (error) {
+            console.error('Error refreshing profile:', error);
+            // Still open modal even if refresh fails
+        }
         setIsEditProfileVisible(true);
     };
 
@@ -58,6 +67,20 @@ const ProfileScreen = () => {
 
     const handleUpdateProfile = async (data: ProfileFormData) => {
         try {
+            console.log('=== Starting Profile Update Process ===');
+            
+            // Step 1: Upload profile picture if a new one was selected
+            if (data.profileImage) {
+                console.log('Step 1: Uploading profile picture to /auth/upload-profile-picture');
+                console.log('Image URI:', data.profileImage);
+                const uploadResult = await authService.uploadProfilePicture(data.profileImage);
+                console.log('Profile picture uploaded successfully:', uploadResult);
+            } else {
+                console.log('Step 1: Skipping profile picture upload (no new image selected)');
+            }
+            
+            // Step 2: Update profile with other data
+            console.log('Step 2: Updating profile data via PATCH /auth/profile');
             const updateData = {
                 name: data.fullName,
                 phoneNumber: data.phoneNumber || undefined,
@@ -65,18 +88,34 @@ const ProfileScreen = () => {
                 address: data.address || undefined,
                 bio: data.bio || undefined,
             };
+            console.log('Update data:', updateData);
             
-            const updatedProfile = await authService.updateProfile(
-                updateData,
-                data.profileImage
-            );
+            const updatedProfile = await authService.updateProfile(updateData);
+            console.log('Profile updated successfully:', updatedProfile);
             
-            setProfile(updatedProfile);
+            // Step 3: Get updated profile to ensure we have the latest data
+            console.log('Step 3: Fetching latest profile via GET /auth/profile');
+            const latestProfile = await authService.getProfile();
+            console.log('Latest profile fetched:', latestProfile);
+            
+            // Update profile state BEFORE closing modal so modal gets fresh data
+            setProfile(latestProfile);
+            console.log('Profile state updated with latest data');
+            
+            console.log('=== Profile Update Process Completed ===');
             Alert.alert('Success', 'Profile updated successfully!');
-            setIsEditProfileVisible(false);
+            
+            // Small delay to ensure state is updated before closing modal
+            setTimeout(() => {
+                setIsEditProfileVisible(false);
+            }, 100);
         } catch (error: any) {
             const apiError = error as ApiError;
+            console.error('=== Profile Update Error ===');
+            console.error('Error details:', apiError);
             Alert.alert('Error', apiError.message || 'Failed to update profile. Please try again.');
+            // Re-throw error so EditProfileModal can reset loading state
+            throw error;
         }
     };
     
