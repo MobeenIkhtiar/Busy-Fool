@@ -7,6 +7,7 @@ import KPICard from '../../../components/KPICard'
 import SearchFilterSection from '../../../components/SearchFilterSection'
 import AddProductModal, { ProductFormData } from '../../../components/AddProductModal'
 import WhatIfModal from '../../../components/WhatIfModal'
+import MilkSwapModal from '../../../components/MilkSwapModal'
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { hp, wp, FONT } from '../../../constants/StyleGuide';
 import { useTheme } from '../../../context/ThemeContext';
@@ -29,6 +30,8 @@ const ProductScreen = () => {
     const [isSubmittingProduct, setIsSubmittingProduct] = useState(false);
     const [showWhatIfModal, setShowWhatIfModal] = useState(false);
     const [whatIfProduct, setWhatIfProduct] = useState<Product | null>(null);
+    const [showMilkSwapModal, setShowMilkSwapModal] = useState(false);
+    const [milkSwapProduct, setMilkSwapProduct] = useState<Product | null>(null);
 
     // Fetch data from APIs
     const fetchData = useCallback(async () => {
@@ -164,6 +167,11 @@ const ProductScreen = () => {
     const handleWhatIfPress = (product: Product) => {
         setWhatIfProduct(product);
         setShowWhatIfModal(true);
+    };
+
+    const handleSwapPress = (product: Product) => {
+        setMilkSwapProduct(product);
+        setShowMilkSwapModal(true);
     };
 
     const handleApplyWhatIfChanges = (updatedProduct: Product) => {
@@ -382,6 +390,7 @@ const ProductScreen = () => {
                                 key={originalProduct?.id || index} 
                                 product={mappedProduct}
                                 onWhatIfPress={() => originalProduct && handleWhatIfPress(originalProduct)}
+                                onSwapPress={() => originalProduct && handleSwapPress(originalProduct)}
                             />
                         );
                     })
@@ -406,6 +415,17 @@ const ProductScreen = () => {
                 }}
                 product={whatIfProduct}
                 onApplyChanges={handleApplyWhatIfChanges}
+            />
+
+            {/* Milk Swap Modal */}
+            <MilkSwapModal
+                visible={showMilkSwapModal}
+                onClose={() => {
+                    setShowMilkSwapModal(false);
+                    setMilkSwapProduct(null);
+                }}
+                product={milkSwapProduct}
+                allIngredients={ingredients}
             />
         </View>
     )

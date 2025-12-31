@@ -25,9 +25,10 @@ interface ProductCardProps {
         }>;
     };
     onWhatIfPress?: () => void;
+    onSwapPress?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product, onWhatIfPress }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onWhatIfPress, onSwapPress }) => {
     const { colors, theme } = useTheme();
     const [showIngredients, setShowIngredients] = useState(false);
     const isProfitable = product.isProfitable;
@@ -205,15 +206,18 @@ const ProductCard: React.FC<ProductCardProps> = ({ product, onWhatIfPress }) => 
                         <Icon name="calculate" size={16} color={colors.white} />
                         <Text style={styles.whatIfText}>What-If</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={[
-                        styles.cloneButton,
-                        {
-                            backgroundColor: cloneButtonBg,
-                            borderColor: colors.lightWhite,
-                        }
-                    ]}>
-                        <Icon name="content-copy" size={16} color={colors.gray} />
-                        <Text style={[styles.cloneText, { color: colors.gray }]}>Clone</Text>
+                    <TouchableOpacity 
+                        style={[
+                            styles.cloneButton,
+                            {
+                                backgroundColor: cloneButtonBg,
+                                borderColor: colors.lightWhite,
+                            }
+                        ]}
+                        onPress={onSwapPress}
+                    >
+                        <Icon name="swap-horiz" size={16} color={colors.gray} />
+                        <Text style={[styles.cloneText, { color: colors.gray }]}>Swap</Text>
                     </TouchableOpacity>
                 </View>
             </View>

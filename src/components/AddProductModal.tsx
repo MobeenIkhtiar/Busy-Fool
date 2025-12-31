@@ -497,7 +497,14 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                             activeOpacity={1}
                             onPress={() => setIsCategoryDropdownVisible(false)}
                         />
-                        <View style={[styles.categoryDropdownContainer, { backgroundColor: colors.primary }]}>
+                        <View style={[
+                            styles.categoryDropdownContainer, 
+                            { 
+                                backgroundColor: colors.primary,
+                                borderWidth: theme === 'dark' ? 2 : 0,
+                                borderColor: theme === 'dark' ? colors.lightWhite : 'transparent',
+                            }
+                        ]}>
                             <FlatList
                                 data={categories}
                                 keyExtractor={(item) => item}
@@ -633,8 +640,8 @@ const styles = StyleSheet.create({
             width: 0,
             height: 4,
         },
-        shadowOpacity: 0.25,
-        shadowRadius: 8,
+        shadowOpacity: 0.3,
+        shadowRadius: 10,
         elevation: 1001,
         zIndex: 1001,
     },
