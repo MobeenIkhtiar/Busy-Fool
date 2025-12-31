@@ -84,12 +84,15 @@ const ProductScreen = () => {
         ? products.reduce((sum, p) => sum + (Number(p.margin_percent) || 0), 0) / products.length
         : 0;
 
+    // KPI card backgrounds: light in light mode, dark in dark mode
+    const kpiCardBg = theme === 'light' ? colors.white : colors.primary;
+    
     const kpiData: Array<{
         icon: string;
         iconBackground: string;
         label: string;
         value: string;
-        contextualText: string;
+        contextualText?: string;
         backgroundColor: string;
         valueColor: string;
     }> = [
@@ -99,7 +102,7 @@ const ProductScreen = () => {
                 label: "Total Products",
                 value: String(products.length),
                 contextualText: `${products.length} products`,
-                backgroundColor: "#ECE8E5",
+                backgroundColor: theme === 'light' ? "#ECE8E5" : kpiCardBg,
                 valueColor: colors.brown
             },
             {
@@ -108,7 +111,7 @@ const ProductScreen = () => {
                 label: "Profitable",
                 value: String(profitableProducts.length),
                 contextualText: `${profitableProducts.length} profitable`,
-                backgroundColor: '#EDFEF4',
+                backgroundColor: theme === 'light' ? '#EDFEF4' : kpiCardBg,
                 valueColor: colors.green
             },
             {
@@ -117,7 +120,7 @@ const ProductScreen = () => {
                 label: "Losing Money",
                 value: String(losingMoneyProducts.length),
                 contextualText: "Fix these!",
-                backgroundColor: "#FEF2F7",
+                backgroundColor: theme === 'light' ? "#FEF2F7" : kpiCardBg,
                 valueColor: colors.red
             },
             {
@@ -125,8 +128,8 @@ const ProductScreen = () => {
                 iconBackground: "#2056E0",
                 label: "Avg Margin",
                 value: `${avgMargin.toFixed(1)}%`,
-                contextualText: "Average margin",
-                backgroundColor: "#EEF3FF",
+                // contextualText: "Average margin",
+                backgroundColor: theme === 'light' ? "#EEF3FF" : kpiCardBg,
                 valueColor: colors.blue
             }
         ];
@@ -352,7 +355,7 @@ const ProductScreen = () => {
                                 iconBackground={kpi.iconBackground}
                                 label={kpi.label}
                                 value={kpi.value}
-                                contextualText={kpi.contextualText}
+                                contextualText={kpi?.contextualText || ''}
                                 backgroundColor={kpi.backgroundColor}
                                 valueColor={kpi.valueColor}
                             />
@@ -366,7 +369,7 @@ const ProductScreen = () => {
                                 iconBackground={kpi.iconBackground}
                                 label={kpi.label}
                                 value={kpi.value}
-                                contextualText={kpi.contextualText}
+                                contextualText={kpi?.contextualText || ''}
                                 backgroundColor={kpi.backgroundColor}
                                 valueColor={kpi.valueColor}
                             />
@@ -524,11 +527,13 @@ const styles = StyleSheet.create({
     },
     kpiSection: {
         marginBottom: hp(3),
+        paddingHorizontal: wp(1), // Add small padding to prevent edge overflow
     },
     kpiRow: {
         flexDirection: 'row',
-        gap: wp(3),
+        gap: wp(2),
         marginBottom: hp(2),
+        width: '100%', // Ensure full width
     },
     loadingContainer: {
         padding: hp(4),

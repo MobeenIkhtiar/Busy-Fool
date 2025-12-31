@@ -11,6 +11,6 @@ export { default as productsService } from './productsService';
 export type { LoginRequest, SignupRequest, AuthResponse, Profile, UpdateProfileRequest, ApiError } from './authService';
 export type { User, UpdateUserRequest } from './userService';
 export type { FileUploadResponse } from './fileService';
-export type { Ingredient, UpdateIngredientRequest, BulkDeleteRequest, BulkDeleteResponse } from './ingredientsService';
+export type { Ingredient, UpdateIngredientRequest, BulkDeleteRequest, BulkDeleteResponse, ImportCsvResponse } from './ingredientsService';
 export type { CategoryTarget, UserSettings, CreateCategoryTargetRequest, UpdateCategoryTargetRequest, CategoryTargetResponse } from './settingsService';
 export type { Product, CreateProductRequest, UpdateProductRequest, ProductIngredient, WhatIfRequest, WhatIfResponse, MilkSwapRequest, MilkSwapResponse, QuickActionRequest, StockItem } from './productsService'; 

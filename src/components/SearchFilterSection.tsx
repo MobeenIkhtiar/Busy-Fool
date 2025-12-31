@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, FlatList } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Modal, FlatList, Platform } from 'react-native';
 import { FONT, hp, wp } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
@@ -123,7 +123,7 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
                                     onPress={() => onSelect(item)}
                                 >
                                     {isSelected && (
-                                        <Ionicons name="checkmark" size={wp(4)} color={colors.brown} style={styles.checkIcon} />
+                                        <Ionicons name="checkmark" size={Platform.OS === 'android' ? wp(3.2) : wp(4)} color={colors.brown} style={styles.checkIcon} />
                                     )}
                                     <Text style={[
                                         styles.dropdownItemText,
@@ -185,7 +185,7 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
                                     onPress={() => onSelect(item.value)}
                                 >
                                     {isSelected && (
-                                        <Ionicons name="checkmark" size={wp(4)} color={colors.brown} style={styles.checkIcon} />
+                                        <Ionicons name="checkmark" size={Platform.OS === 'android' ? wp(3.2) : wp(4)} color={colors.brown} style={styles.checkIcon} />
                                     )}
                                     <Text style={[
                                         styles.dropdownItemText,
@@ -239,12 +239,13 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
                     <Text style={[styles.filterText, { color: colors.black }]}>
                         {getCategoryLabel(categoryFilter)}
                     </Text>
-                    <Ionicons name="chevron-down" size={wp(4)} color={colors.gray} />
+                    <Ionicons name="chevron-down" size={Platform.OS === 'android' ? wp(3.2) : wp(4)} color={colors.gray} />
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                     style={[
                         styles.filterButton,
+                        styles.filterButtonSmall,
                         { backgroundColor: searchFilterBg }
                     ]}
                     onPress={() => setIsStatusDropdownVisible(true)}
@@ -252,12 +253,13 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
                     <Text style={[styles.filterText, { color: colors.black }]}>
                         {getStatusLabel(statusFilter)}
                     </Text>
-                    <Ionicons name="chevron-down" size={wp(4)} color={colors.gray} />
+                    <Ionicons name="chevron-down" size={Platform.OS === 'android' ? wp(3.2) : wp(4)} color={colors.gray} />
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                     style={[
                         styles.filterButton,
+                        styles.filterButtonSmall,
                         { backgroundColor: searchFilterBg }
                     ]}
                     onPress={() => setIsSortDropdownVisible(true)}
@@ -265,7 +267,7 @@ const SearchFilterSection: React.FC<SearchFilterSectionProps> = ({
                     <Text style={[styles.filterText, { color: colors.black }]}>
                         {getSortLabel(sortBy)}
                     </Text>
-                    <Ionicons name="chevron-down" size={wp(4)} color={colors.gray} />
+                    <Ionicons name="chevron-down" size={Platform.OS === 'android' ? wp(3.2) : wp(4)} color={colors.gray} />
                 </TouchableOpacity>
             </View>
 
@@ -305,28 +307,29 @@ const styles = StyleSheet.create({
     container: {
         borderRadius: wp(2),
         paddingHorizontal: wp(1),
-        paddingVertical:hp(2),
+        paddingVertical: Platform.OS === 'android' ? hp(1.5) : hp(2),
         shadowOpacity: 0.1,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 4,
         elevation: 3,
-        marginBottom: hp(4),
+        marginBottom: Platform.OS === 'android' ? hp(3) : hp(4),
+        marginHorizontal: wp(1),
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
-        paddingVertical: hp(1),
-        marginBottom: hp(1.5),
+        paddingVertical: Platform.OS === 'android' ? hp(0.5) : hp(0.8),
+        marginBottom: Platform.OS === 'android' ? hp(1) : hp(1.5),
     },
     searchIcon: {
-        fontSize: wp(4),
+        fontSize: Platform.OS === 'android' ? wp(3.5) : wp(4),
         marginRight: wp(2),
     },
     searchInput: {
         flex: 1,
-        fontSize: wp(3.5),
+        fontSize: Platform.OS === 'android' ? wp(3.2) : wp(3.5),
         fontFamily: FONT.regular,
     },
     filterContainer: {
@@ -340,10 +343,13 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         borderRadius: wp(2),
         paddingHorizontal: wp(3),
-        paddingVertical: hp(1),
+        paddingVertical: Platform.OS === 'android' ? hp(0.8) : hp(1),
+    },
+    filterButtonSmall: {
+        flex: 0.75, // Reduced width for 2nd and 3rd dropdowns
     },
     filterText: {
-        fontSize: wp(3.5),
+        fontSize: Platform.OS === 'android' ? wp(3.2) : wp(3.5),
         fontFamily: FONT.medium,
         flex: 1,
     },
@@ -368,7 +374,7 @@ const styles = StyleSheet.create({
     },
     dropdownItem: {
         paddingHorizontal: wp(4),
-        paddingVertical: hp(2),
+        paddingVertical: Platform.OS === 'android' ? hp(1) : hp(2),
         borderBottomWidth: 1,
         flexDirection: 'row',
         alignItems: 'center',
@@ -380,7 +386,7 @@ const styles = StyleSheet.create({
         marginRight: wp(3),
     },
     dropdownItemText: {
-        fontSize: wp(4),
+        fontSize: Platform.OS === 'android' ? wp(3.2) : wp(4),
         fontFamily: FONT.medium,
     },
     selectedItemText: {

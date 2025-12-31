@@ -295,7 +295,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         paddingHorizontal: wp(4),
         borderRadius: wp(2),
         borderWidth: 1,
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
     },
     dropdownItem: {
         paddingHorizontal: wp(4),
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         borderBottomWidth: 1,
     },
     selectedItem: {

@@ -310,25 +310,38 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                                 key={ingredient.id}
                                 style={[styles.ingredientItem, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}
                             >
-                                <TouchableOpacity
-                                    style={styles.ingredientCheckbox}
-                                    onPress={() => toggleIngredient(ingredient, !checked)}
-                                >
-                                    <Ionicons
-                                        name={checked ? 'checkbox' : 'checkbox-outline'}
-                                        size={wp(5)}
-                                        color={checked ? colors.brown : colors.gray}
-                                    />
-                                </TouchableOpacity>
-                                <View style={styles.ingredientInfo}>
-                                    <Text style={[styles.ingredientName, { color: colors.black }]}>{ingredient.name}</Text>
-                                    <Text style={[styles.ingredientPrice, { color: colors.gray }]}>£{price.toFixed(4)}</Text>
+                                {/* First Row: Checkbox, Name, Price */}
+                                <View style={styles.ingredientRow}>
+                                    <TouchableOpacity
+                                        style={styles.ingredientCheckbox}
+                                        onPress={() => toggleIngredient(ingredient, !checked)}
+                                    >
+                                        <Ionicons
+                                            name={checked ? 'checkbox' : 'checkbox-outline'}
+                                            size={wp(5)}
+                                            color={checked ? colors.brown : colors.gray}
+                                        />
+                                    </TouchableOpacity>
+                                    <View style={styles.ingredientInfo}>
+                                        <Text style={[styles.ingredientName, { color: colors.black }]}>{ingredient.name}</Text>
+                                        <Text style={[styles.ingredientPrice, { color: colors.gray }]}>£{price.toFixed(4)}</Text>
+                                    </View>
                                 </View>
+                                
+                                {/* Second Row: Quantity Input, Unit, Optional Checkbox (only when checked) */}
                                 {checked && selected && (
-                                    <View style={styles.ingredientControls}>
+                                    <View style={styles.ingredientControlsRow}>
                                         <View style={styles.quantityContainer}>
                                             <TextInput
-                                                style={[styles.quantityInput, { backgroundColor: colors.primary, color: colors.black, borderColor: colors.lightgray }]}
+                                                style={[
+                                                    styles.quantityInput, 
+                                                    { 
+                                                        backgroundColor: colors.primary, 
+                                                        color: colors.black, 
+                                                        borderColor: colors.lightgray,
+                                                        ...(Platform.OS === 'android' && { paddingTop: 0, paddingBottom: 0 })
+                                                    }
+                                                ]}
                                                 value={String(selected.selectedQuantity)}
                                                 onChangeText={(text) => {
                                                     const val = Math.max(1, parseInt(text) || 1);
@@ -724,12 +737,14 @@ const styles = StyleSheet.create({
         padding: wp(2),
     },
     ingredientItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
         padding: wp(3),
         marginBottom: hp(1),
         borderRadius: wp(2),
         borderWidth: 1,
+    },
+    ingredientRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
     },
     ingredientCheckbox: {
         marginRight: wp(3),
@@ -746,9 +761,11 @@ const styles = StyleSheet.create({
         fontFamily: FONT.regular,
         marginTop: hp(0.3),
     },
-    ingredientControls: {
+    ingredientControlsRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginTop: hp(1.5),
+        paddingLeft: wp(8), // Align with ingredient name (checkbox width + margin)
         gap: wp(2),
     },
     quantityContainer: {
@@ -762,9 +779,12 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: wp(1.5),
         paddingHorizontal: wp(2),
+        paddingVertical: Platform.OS === 'android' ? hp(0.5) : 0, // Add padding for Android to prevent text cutoff
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
         textAlign: 'center',
+        textAlignVertical: 'center', // Center text vertically on Android
+        includeFontPadding: false, // Remove extra padding on Android
     },
     unitText: {
         fontSize: wp(3),

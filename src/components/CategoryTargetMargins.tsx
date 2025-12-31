@@ -320,17 +320,14 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
                             <Text style={[styles.cancelButtonText, { color: subtitleColor }]}>Cancel</Text>
                         </TouchableOpacity>
                         <CustomButton
-                            title="Save"
-                            iconName="save-outline"
+                            title={isSaving ? "Saving..." : "Save"}
+                            iconName={isSaving ? undefined : "save-outline"}
                             backgroundColor="#10B981"
                             textColor={colors.white}
                             onPress={handleSave}
                             disabled={isSaving}
-                            style={styles.saveButtonForm}
+                            style={[styles.saveButtonForm, { height: hp(5), paddingVertical: 0, minHeight: hp(5) }]}
                         />
-                        {isSaving && (
-                            <ActivityIndicator size="small" color={colors.white} style={styles.loadingIndicator} />
-                        )}
                     </View>
                 </View>
             )}
@@ -641,7 +638,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         paddingHorizontal: wp(4),
         borderRadius: wp(2),
         borderWidth: 1,
@@ -652,7 +649,7 @@ const styles = StyleSheet.create({
         flex: 1,
     },
     input: {
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         paddingHorizontal: wp(4),
         borderRadius: wp(2),
         borderWidth: 1,
@@ -678,6 +675,8 @@ const styles = StyleSheet.create({
     },
     saveButtonForm: {
         flex: 1,
+        height: hp(5),
+        paddingVertical: 0,
     },
     modalOverlay: {
         flex: 1,
@@ -701,7 +700,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: wp(4),
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         borderBottomWidth: 1,
     },
     checkIcon: {

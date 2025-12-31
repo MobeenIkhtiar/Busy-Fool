@@ -602,7 +602,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({
                                 backgroundColor={colors.brown}
                                 textColor={colors.white}
                                 onPress={handleSubmit}
-                                style={styles.updateButton}
+                                style={[styles.updateButton, { height: hp(5), paddingVertical: 0, minHeight: hp(5) }]}
                             />
                         </View>
                     </ScrollView>
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
         marginBottom: hp(1),
     },
     input: {
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         paddingHorizontal: wp(4),
         borderRadius: wp(2),
         borderWidth: 1,
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
         position: 'relative',
     },
     bioInput: {
-        paddingVertical: hp(2),
+        paddingVertical: hp(1.5),
         paddingHorizontal: wp(4),
         paddingBottom: hp(6),
         borderRadius: wp(2),
@@ -740,7 +740,7 @@ const styles = StyleSheet.create({
     },
     resetButton: {
         flex: 1,
-        height: hp(5.5),
+        height: hp(5),
         borderRadius: wp(2),
         justifyContent: 'center',
         alignItems: 'center',

@@ -46,6 +46,7 @@ const IngredientsScreen = () => {
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
+    const [isImporting, setIsImporting] = useState(false);
 
     // Helper function to determine stock level based on quantity
     const getStockLevel = (quantity: number): 'high' | 'medium' | 'low' => {
@@ -409,6 +410,97 @@ const IngredientsScreen = () => {
         }
     };
 
+    const handleImportCSV = async () => {
+        try {
+            // Open file picker for CSV files only
+            const result = await pick({
+                allowMultiSelection: false,
+                type: ['text/csv', 'application/vnd.ms-excel'], // CSV MIME types
+            });
+
+            if (result && result.length > 0) {
+                const selectedFile = result[0];
+                const fileName = selectedFile.name || 'ingredients.csv';
+                
+                // Validate file extension
+                if (!fileName.toLowerCase().endsWith('.csv')) {
+                    Alert.alert('Invalid File', 'Please select a CSV file.');
+                    return;
+                }
+
+                setIsImporting(true);
+
+                try {
+                    // Upload CSV file to API
+                    const response = await ingredientsService.importCsv(selectedFile.uri, fileName);
+                    
+                    console.log('CSV import response:', response);
+                    
+                    if (!response.importedIngredients || response.importedIngredients.length === 0) {
+                        Alert.alert(
+                            'No Ingredients Imported',
+                            'No new ingredients were imported. All ingredients may already exist.'
+                        );
+                        setIsImporting(false);
+                        return;
+                    }
+
+                    // Filter duplicates (case-insensitive name matching)
+                    const existingIngredientNames = new Set(
+                        ingredients.map(ing => ing.name.toLowerCase())
+                    );
+                    
+                    const uniqueImported = response.importedIngredients.filter(
+                        imported => !existingIngredientNames.has(imported.name.toLowerCase())
+                    );
+                    
+                    const duplicatesCount = response.importedIngredients.length - uniqueImported.length;
+
+                    // Map imported ingredients to component format and add to list
+                    const mappedImported = uniqueImported.map(mapApiIngredientToComponent);
+                    setIngredients(prev => [...prev, ...mappedImported]);
+                    
+                    // Update API ingredients list for future exports
+                    setApiIngredients(prev => [...prev, ...uniqueImported]);
+
+                    // Show success message
+                    if (duplicatesCount > 0) {
+                        Alert.alert(
+                            'Import Successful',
+                            `Imported ${uniqueImported.length} unique ingredient(s). ${duplicatesCount} duplicate(s) were skipped.`
+                        );
+                    } else {
+                        Alert.alert(
+                            'Import Successful',
+                            `Imported ${uniqueImported.length} ingredient(s) successfully.`
+                        );
+                    }
+
+                    // Refresh ingredients list to get latest data
+                    await fetchIngredients();
+                } catch (error: any) {
+                    const apiError = error as ApiError;
+                    console.error('CSV import error:', apiError);
+                    Alert.alert(
+                        'Import Failed',
+                        apiError.message || 'Failed to import CSV. Please check the file format and try again.'
+                    );
+                } finally {
+                    setIsImporting(false);
+                }
+            }
+        } catch (err: any) {
+            // Check if user cancelled
+            if (err?.message?.includes('cancel') || err?.code === 'DOCUMENT_PICKER_CANCELED') {
+                console.log('User cancelled CSV import');
+            } else {
+                console.error('File picker error:', err);
+                Alert.alert('Error', 'Failed to select CSV file. Please try again.');
+            }
+            setIsImporting(false);
+        }
+    };
+
     const handleFileUpload = async (file: any) => {
         console.log('handleFileUpload called with file:', {
             name: file.name,
@@ -622,9 +714,19 @@ const IngredientsScreen = () => {
                                 {isExporting ? 'Exporting...' : 'Export CSV'}
                             </Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
-                            <Ionicons name="cloud-download-outline" size={wp(4)} color={colors.black} />
-                            <Text style={[styles.filterButtonText, { color: colors.black }]}>Import CSV</Text>
+                        <TouchableOpacity 
+                            style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}
+                            onPress={handleImportCSV}
+                            disabled={isImporting || isSelectionMode}
+                        >
+                            {isImporting ? (
+                                <ActivityIndicator size="small" color={colors.brown} />
+                            ) : (
+                                <Ionicons name="cloud-download-outline" size={wp(4)} color={colors.black} />
+                            )}
+                            <Text style={[styles.filterButtonText, { color: colors.black }]}>
+                                {isImporting ? 'Importing...' : 'Import CSV'}
+                            </Text>
                         </TouchableOpacity>
                     </View>
 

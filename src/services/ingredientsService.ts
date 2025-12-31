@@ -33,6 +33,10 @@ export interface BulkDeleteResponse {
     deleted: number;
 }
 
+export interface ImportCsvResponse {
+    importedIngredients: Ingredient[];
+}
+
 export interface ApiError {
     message: string;
     status: number;
@@ -77,6 +81,33 @@ class IngredientsService {
             const response = await apiService.post<BulkDeleteResponse>(
                 API_CONFIG.ENDPOINTS.INGREDIENTS.BULK_DELETE,
                 { ids }
+            );
+            return response.data;
+        } catch (error: any) {
+            throw this.handleError(error);
+        }
+    }
+
+    // Import CSV file
+    async importCsv(fileUri: string, fileName: string): Promise<ImportCsvResponse> {
+        try {
+            const formData = new FormData();
+            
+            // Append CSV file
+            formData.append('file', {
+                uri: fileUri,
+                type: 'text/csv',
+                name: fileName,
+            } as any);
+
+            const response = await apiService.post<ImportCsvResponse>(
+                API_CONFIG.ENDPOINTS.INGREDIENTS.IMPORT_CSV,
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                    },
+                }
             );
             return response.data;
         } catch (error: any) {
