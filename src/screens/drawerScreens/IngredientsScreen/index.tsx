@@ -11,6 +11,8 @@ import EditIngredientModal from '../../../components/EditIngredientModal'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { pick } from '@react-native-documents/picker'
+import Share from 'react-native-share'
+import RNFS from 'react-native-fs'
 import { fileService, ingredientsService, ApiError, Ingredient, UpdateIngredientRequest } from '../../../services'
 
 // Type for component's ingredient format
@@ -36,6 +38,7 @@ const IngredientsScreen = () => {
     const [editingIngredient, setEditingIngredient] = useState<ComponentIngredient | null>(null);
     const [isUpdating, setIsUpdating] = useState(false);
     const [ingredients, setIngredients] = useState<ComponentIngredient[]>([]);
+    const [apiIngredients, setApiIngredients] = useState<Ingredient[]>([]); // Store original API data for export
     const [isUploading, setIsUploading] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -43,6 +46,7 @@ const IngredientsScreen = () => {
     const [isSelectionMode, setIsSelectionMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
     const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+    const [isExporting, setIsExporting] = useState(false);
 
     // Helper function to determine stock level based on quantity
     const getStockLevel = (quantity: number): 'high' | 'medium' | 'low' => {
@@ -86,11 +90,14 @@ const IngredientsScreen = () => {
         setError(null);
         try {
             console.log('Fetching ingredients from API...');
-            const apiIngredients = await ingredientsService.getIngredients();
-            console.log('Ingredients fetched successfully:', apiIngredients);
+            const fetchedIngredients = await ingredientsService.getIngredients();
+            console.log('Ingredients fetched successfully:', fetchedIngredients);
+            
+            // Store original API data for export
+            setApiIngredients(fetchedIngredients);
             
             // Map API response to component format
-            const mappedIngredients = apiIngredients.map(mapApiIngredientToComponent);
+            const mappedIngredients = fetchedIngredients.map(mapApiIngredientToComponent);
             setIngredients(mappedIngredients);
         } catch (err: any) {
             const apiError = err as ApiError;
@@ -451,6 +458,97 @@ const IngredientsScreen = () => {
         }
     };
 
+    const handleExportCSV = async () => {
+        if (apiIngredients.length === 0) {
+            Alert.alert('No Data', 'There are no ingredients to export.');
+            return;
+        }
+
+        setIsExporting(true);
+
+        try {
+            // CSV Headers
+            const headers = [
+                'Name',
+                'Unit',
+                'Quantity',
+                'Purchase Price',
+                'Waste %',
+                'Supplier',
+                'Cost Per Subunit'
+            ];
+
+            // Generate CSV rows using original API ingredients
+            const csvRows = apiIngredients.map((ing) => {
+                // Calculate cost per subunit based on unit type (same logic as web)
+                let costPerSubunit = '0.0000';
+                
+                if (ing.unit === 'ml' || ing.unit === 'L') {
+                    // For liquid units (ml, L)
+                    costPerSubunit = ing.cost_per_ml ? ing.cost_per_ml.toFixed(4) : '0.0000';
+                } else if (ing.unit === 'g' || ing.unit === 'kg') {
+                    // For weight units (g, kg)
+                    costPerSubunit = ing.cost_per_gram ? ing.cost_per_gram.toFixed(4) : '0.0000';
+                } else {
+                    // For other units
+                    costPerSubunit = ing.cost_per_unit ? ing.cost_per_unit.toFixed(4) : '0.0000';
+                }
+
+                // Create row array with proper escaping
+                const row = [
+                    ing.name ?? '',
+                    ing.unit ?? '',
+                    ing.quantity ?? '',
+                    ing.purchase_price ?? '',
+                    ing.waste_percent ?? '',
+                    ing.supplier ?? '',
+                    costPerSubunit,
+                ];
+
+                // Escape quotes and wrap in double quotes
+                return row
+                    .map((val) => `"${String(val).replace(/"/g, '""')}"`)
+                    .join(',');
+            });
+
+            // Combine headers and rows
+            const csvContent = [
+                headers.join(','),
+                ...csvRows,
+            ].join('\n');
+
+            // Create file path
+            const fileName = 'busy-fool-ingredients.csv';
+            const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+
+            // Write CSV content to file
+            await RNFS.writeFile(filePath, csvContent, 'utf8');
+
+            console.log('CSV file created at:', filePath);
+
+            // Share/save the file
+            await Share.open({
+                url: Platform.OS === 'ios' ? `file://${filePath}` : `file://${filePath}`,
+                type: 'text/csv',
+                filename: fileName,
+                title: 'Export Ingredients CSV',
+                message: 'Export ingredients data as CSV',
+            });
+
+            Alert.alert('Success', 'CSV file exported successfully!');
+        } catch (error: any) {
+            // Check if user cancelled
+            if (error?.message?.includes('User did not share') || error?.message?.includes('cancel')) {
+                console.log('User cancelled CSV export');
+            } else {
+                console.error('CSV export error:', error);
+                Alert.alert('Error', 'Failed to export CSV. Please try again.');
+            }
+        } finally {
+            setIsExporting(false);
+        }
+    };
+
     return (
         <View style={[styles.container, { backgroundColor: colors.primary }]}>
             <TopBar navigation={navigation as any} />
@@ -486,9 +584,19 @@ const IngredientsScreen = () => {
 
                     {/* Row 2: Export CSV & Import CSV & Select Mode */}
                     <View style={styles.actionButtons}>
-                        <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
-                            <Image source={icons.export} style={[styles.buttonIcon, { tintColor: colors.black }]} />
-                            <Text style={[styles.filterButtonText, { color: colors.black }]}>Export CSV</Text>
+                        <TouchableOpacity 
+                            style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}
+                            onPress={handleExportCSV}
+                            disabled={isExporting || isSelectionMode}
+                        >
+                            {isExporting ? (
+                                <ActivityIndicator size="small" color={colors.brown} />
+                            ) : (
+                                <Image source={icons.export} style={[styles.buttonIcon, { tintColor: colors.black }]} />
+                            )}
+                            <Text style={[styles.filterButtonText, { color: colors.black }]}>
+                                {isExporting ? 'Exporting...' : 'Export CSV'}
+                            </Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={[styles.filterButton, { backgroundColor: theme === 'light' ? colors.white : colors.primary, borderColor: colors.lightgray }]}>
                             <Ionicons name="cloud-download-outline" size={wp(4)} color={colors.black} />

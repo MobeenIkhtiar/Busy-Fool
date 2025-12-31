@@ -97,6 +97,7 @@ const Login: React.FC = () => {
                         title={isLoading ? "Logging In..." : "Log In"}
                         onPress={handleLogin}
                         disabled={isLoading}
+                        style={styles.loginButton}
                     />
 
                 </Animatable.View>
@@ -160,5 +161,8 @@ const styles = StyleSheet.create({
         marginTop: hp(2),
         alignItems: 'center',
         justifyContent: 'center',
+    },
+    loginButton: {
+        marginTop: hp(2),
     },
 });
