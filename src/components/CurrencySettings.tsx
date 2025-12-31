@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, ActivityIndicator, Alert } from 'react-native';
 import { FONT, wp, hp } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomButton from './CustomButton';
+import { settingsService, UserSettings, ApiError } from '../services';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface Currency {
     code: string;
@@ -34,20 +37,83 @@ const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onSave }) => {
     const [selectedCurrency, setSelectedCurrency] = useState<Currency>(currencies[0]);
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
     const [currentCurrency, setCurrentCurrency] = useState<Currency>(currencies[0]);
-
+    const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
+    
+    const CURRENCY_STORAGE_KEY = 'nina-currency';
+    
     // Check if currency has changed
     const isCurrencyChanged = selectedCurrency.code !== currentCurrency.code;
+    
+    // Fetch currency from API and AsyncStorage
+    const fetchCurrency = async () => {
+        setIsLoading(true);
+        try {
+            // First try to get from API
+            const settings = await settingsService.getSettings();
+            const apiCurrency = settings.currency || 'GBP';
+            
+            // Also check AsyncStorage (for backward compatibility)
+            const storedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
+            const currencyCode = storedCurrency || apiCurrency || 'GBP';
+            
+            // Find currency object
+            const currency = currencies.find(c => c.code === currencyCode) || currencies[0];
+            
+            setCurrentCurrency(currency);
+            setSelectedCurrency(currency);
+        } catch (error: any) {
+            // If API fails, try AsyncStorage
+            try {
+                const storedCurrency = await AsyncStorage.getItem(CURRENCY_STORAGE_KEY);
+                if (storedCurrency) {
+                    const currency = currencies.find(c => c.code === storedCurrency) || currencies[0];
+                    setCurrentCurrency(currency);
+                    setSelectedCurrency(currency);
+                }
+            } catch (storageError) {
+                console.error('Error loading currency from storage:', storageError);
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    useEffect(() => {
+        fetchCurrency();
+    }, []);
+    
+    useFocusEffect(
+        useCallback(() => {
+            fetchCurrency();
+        }, [])
+    );
 
     const handleCurrencySelect = (currency: Currency) => {
         setSelectedCurrency(currency);
         setIsDropdownVisible(false);
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!isCurrencyChanged) return; // Prevent save if no change
-        setCurrentCurrency(selectedCurrency);
-        if (onSave) {
-            onSave(selectedCurrency);
+        
+        setIsSaving(true);
+        try {
+            // Save to AsyncStorage (like localStorage on web)
+            await AsyncStorage.setItem(CURRENCY_STORAGE_KEY, selectedCurrency.code);
+            
+            // Update current currency
+            setCurrentCurrency(selectedCurrency);
+            
+            Alert.alert('Success', 'Currency updated successfully!');
+            
+            if (onSave) {
+                onSave(selectedCurrency);
+            }
+        } catch (error) {
+            Alert.alert('Error', 'Failed to save currency');
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -82,21 +148,27 @@ const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onSave }) => {
             {/* Currency Selector */}
             <View style={styles.currencySection}>
                 <Text style={[styles.label, { color: textColor }]}>Display Currency</Text>
-                <TouchableOpacity
-                    style={[
-                        styles.dropdown,
-                        {
-                            backgroundColor: dropdownBg,
-                            borderColor: colors.lightWhite,
-                        }
-                    ]}
-                    onPress={() => setIsDropdownVisible(true)}
-                >
-                    <Text style={[styles.dropdownText, { color: dropdownTextColor }]}>
-                        {getCurrencyDisplay(selectedCurrency)}
-                    </Text>
-                    <Ionicons name="chevron-down" size={wp(4)} color={dropdownTextColor} />
-                </TouchableOpacity>
+                {isLoading ? (
+                    <View style={[styles.dropdown, { backgroundColor: dropdownBg, borderColor: colors.lightWhite, justifyContent: 'center' }]}>
+                        <ActivityIndicator size="small" color={dropdownTextColor} />
+                    </View>
+                ) : (
+                    <TouchableOpacity
+                        style={[
+                            styles.dropdown,
+                            {
+                                backgroundColor: dropdownBg,
+                                borderColor: colors.lightWhite,
+                            }
+                        ]}
+                        onPress={() => setIsDropdownVisible(true)}
+                    >
+                        <Text style={[styles.dropdownText, { color: dropdownTextColor }]}>
+                            {getCurrencyDisplay(selectedCurrency)}
+                        </Text>
+                        <Ionicons name="chevron-down" size={wp(4)} color={dropdownTextColor} />
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* Save Button */}
@@ -105,7 +177,7 @@ const CurrencySettings: React.FC<CurrencySettingsProps> = ({ onSave }) => {
                 iconName="save-outline"
                 backgroundColor={isCurrencyChanged ? '#10B981' : undefined}
                 textColor={colors.white}
-                disabled={!isCurrencyChanged}
+                disabled={!isCurrencyChanged || isSaving}
                 onPress={handleSave}
                 style={styles.saveButton}
             />

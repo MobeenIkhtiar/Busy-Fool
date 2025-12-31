@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, TextInput } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, FlatList, TextInput, ActivityIndicator, Alert } from 'react-native';
 import { FONT, wp, hp } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import CustomButton from './CustomButton';
+import { settingsService, CategoryTarget, ApiError } from '../services';
+import { useFocusEffect } from '@react-navigation/native';
 
 interface CategoryTargetMarginsProps {
     onAddTarget?: () => void;
@@ -24,22 +26,51 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
     const inputTextColor = theme === 'light' ? colors.black : colors.white;
     const inputPlaceholderColor = colors.lightgray;
     
-    const [targets, setTargets] = useState<any[]>([]); // Empty for now
+    const [targets, setTargets] = useState<CategoryTarget[]>([]);
+    const [categories, setCategories] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [showForm, setShowForm] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState<string>('Select category...');
     const [targetMargin, setTargetMargin] = useState<string>('');
     const [isCategoryDropdownVisible, setIsCategoryDropdownVisible] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editingTarget, setEditingTarget] = useState<CategoryTarget | null>(null);
+    const [editingMargin, setEditingMargin] = useState<string>('');
     
-    // Static categories data
-    const categories = [
-        'Select category...',
-        'Beverage',
-        'Coffee',
-        'Food',
-        'Iced Drinks',
-        'Pastries',
-        'uncategorized',
-    ];
+    // Get available categories (categories that don't have targets yet)
+    const availableCategories = categories.filter(
+        (cat) => !targets.some((target) => target.category === cat)
+    );
+    
+    // Fetch categories and targets
+    const fetchData = async () => {
+        setIsLoading(true);
+        try {
+            const [categoriesData, targetsData] = await Promise.all([
+                settingsService.getCategories(),
+                settingsService.getCategoryTargets(),
+            ]);
+            setCategories(categoriesData);
+            setTargets(targetsData);
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            console.error('Error fetching settings data:', apiError);
+            Alert.alert('Error', apiError.message || 'Failed to load settings data');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    
+    // Fetch data on mount and when screen comes into focus
+    useEffect(() => {
+        fetchData();
+    }, []);
+    
+    useFocusEffect(
+        useCallback(() => {
+            fetchData();
+        }, [])
+    );
     
     const handleAddTargetPress = () => {
         setShowForm(!showForm);
@@ -47,6 +78,7 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
             // Reset form when opening
             setSelectedCategory('Select category...');
             setTargetMargin('');
+            setEditingTarget(null);
         }
         if (onAddTarget) {
             onAddTarget();
@@ -54,34 +86,132 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
     };
     
     const handleCategorySelect = (category: string) => {
+        if (category === 'Select category...') return;
         setSelectedCategory(category);
         setIsCategoryDropdownVisible(false);
     };
     
-    const handleSave = () => {
+    const handleSave = async () => {
         if (selectedCategory === 'Select category...' || !targetMargin.trim()) {
-            // Validation - in future can show error message
+            Alert.alert('Validation Error', 'Please fill in all fields');
             return;
         }
         
-        // Add target to list
-        const newTarget = {
-            id: Date.now().toString(),
-            category: selectedCategory,
-            margin: parseFloat(targetMargin),
-        };
-        setTargets([...targets, newTarget]);
+        const marginValue = parseFloat(targetMargin);
+        if (isNaN(marginValue) || marginValue < 0 || marginValue > 100) {
+            Alert.alert('Validation Error', 'Target margin must be between 0 and 100');
+            return;
+        }
         
-        // Reset form
-        setShowForm(false);
-        setSelectedCategory('Select category...');
-        setTargetMargin('');
+        setIsSaving(true);
+        try {
+            const response = await settingsService.createCategoryTarget({
+                category: selectedCategory,
+                target_margin_percent: marginValue,
+            });
+            
+            // Refresh targets list
+            await fetchData();
+            
+            Alert.alert(
+                'Success',
+                `Target saved! ${response.productsUpdated || 0} product(s) recalculated.`
+            );
+            
+            // Reset form
+            setShowForm(false);
+            setSelectedCategory('Select category...');
+            setTargetMargin('');
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            Alert.alert('Error', apiError.message || 'Failed to save target');
+        } finally {
+            setIsSaving(false);
+        }
     };
     
     const handleCancel = () => {
         setShowForm(false);
         setSelectedCategory('Select category...');
         setTargetMargin('');
+        setEditingTarget(null);
+    };
+    
+    const handleEdit = (target: CategoryTarget) => {
+        setEditingTarget(target);
+        setEditingMargin(target.target_margin_percent.toString());
+    };
+    
+    const handleUpdate = async () => {
+        if (!editingTarget || !editingMargin.trim()) {
+            Alert.alert('Validation Error', 'Please enter a target margin');
+            return;
+        }
+        
+        const marginValue = parseFloat(editingMargin);
+        if (isNaN(marginValue) || marginValue < 0 || marginValue > 100) {
+            Alert.alert('Validation Error', 'Target margin must be between 0 and 100');
+            return;
+        }
+        
+        setIsSaving(true);
+        try {
+            const response = await settingsService.updateCategoryTarget(editingTarget.category, {
+                target_margin_percent: marginValue,
+            });
+            
+            // Refresh targets list
+            await fetchData();
+            
+            Alert.alert(
+                'Success',
+                `Target updated! ${response.productsUpdated || 0} product(s) recalculated.`
+            );
+            
+            setEditingTarget(null);
+            setEditingMargin('');
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            Alert.alert('Error', apiError.message || 'Failed to update target');
+        } finally {
+            setIsSaving(false);
+        }
+    };
+    
+    const handleDelete = async (category: string) => {
+        Alert.alert(
+            'Delete Target',
+            `Delete target for "${category}"? Products will revert to 0% target.`,
+            [
+                {
+                    text: 'Cancel',
+                    style: 'cancel',
+                },
+                {
+                    text: 'Delete',
+                    style: 'destructive',
+                    onPress: async () => {
+                        setIsSaving(true);
+                        try {
+                            const response = await settingsService.deleteCategoryTarget(category);
+                            
+                            // Refresh targets list
+                            await fetchData();
+                            
+                            Alert.alert(
+                                'Success',
+                                `Target deleted! ${response.productsUpdated || 0} product(s) recalculated.`
+                            );
+                        } catch (error: any) {
+                            const apiError = error as ApiError;
+                            Alert.alert('Error', apiError.message || 'Failed to delete target');
+                        } finally {
+                            setIsSaving(false);
+                        }
+                    },
+                },
+            ]
+        );
     };
 
     return (
@@ -106,13 +236,15 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
                         </Text>
                     </View>
                 </View>
-                <TouchableOpacity
-                    style={[styles.addButton, { backgroundColor: '#10B981' }]}
-                    onPress={handleAddTargetPress}
-                >
-                    <Ionicons name="add" size={wp(4.5)} color={colors.white} />
-                    <Text style={[styles.addButtonText, { color: colors.white }]}>Add Target</Text>
-                </TouchableOpacity>
+                {!showForm && availableCategories.length > 0 && (
+                    <TouchableOpacity
+                        style={[styles.addButton, { backgroundColor: '#10B981' }]}
+                        onPress={handleAddTargetPress}
+                    >
+                        <Ionicons name="add" size={wp(4.5)} color={colors.white} />
+                        <Text style={[styles.addButtonText, { color: colors.white }]}>Add Target</Text>
+                    </TouchableOpacity>
+                )}
             </View>
 
             {/* New Category Target Form */}
@@ -193,14 +325,25 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
                             backgroundColor="#10B981"
                             textColor={colors.white}
                             onPress={handleSave}
+                            disabled={isSaving}
                             style={styles.saveButtonForm}
                         />
+                        {isSaving && (
+                            <ActivityIndicator size="small" color={colors.white} style={styles.loadingIndicator} />
+                        )}
                     </View>
                 </View>
             )}
 
             {/* Content */}
-            {targets.length === 0 ? (
+            {isLoading ? (
+                <View style={styles.emptyState}>
+                    <ActivityIndicator size="large" color={colors.brown} />
+                    <Text style={[styles.emptyText, { color: textColor, marginTop: hp(2) }]}>
+                        Loading targets...
+                    </Text>
+                </View>
+            ) : targets.length === 0 ? (
                 <View style={styles.emptyState}>
                     <Ionicons name="target-outline" size={wp(15)} color={colors.lightgray} />
                     <Text style={[styles.emptyText, { color: textColor }]}>
@@ -212,7 +355,90 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
                 </View>
             ) : (
                 <View style={styles.targetsList}>
-                    {/* Targets list will go here */}
+                    {targets.map((target) => (
+                        <View
+                            key={target.id || target.category}
+                            style={[
+                                styles.targetItem,
+                                {
+                                    backgroundColor: formCardBg,
+                                    borderColor: colors.lightWhite,
+                                }
+                            ]}
+                        >
+                            {editingTarget?.category === target.category ? (
+                                <View style={styles.targetItemEdit}>
+                                    <Text style={[styles.targetCategory, { color: textColor }]}>
+                                        {target.category}
+                                    </Text>
+                                    <View style={styles.editInputContainer}>
+                                        <TextInput
+                                            style={[
+                                                styles.editInput,
+                                                {
+                                                    backgroundColor: inputBg,
+                                                    borderColor: '#10B981',
+                                                    color: inputTextColor,
+                                                }
+                                            ]}
+                                            value={editingMargin}
+                                            onChangeText={setEditingMargin}
+                                            keyboardType="numeric"
+                                            placeholder="0"
+                                        />
+                                        <Text style={[styles.percentLabel, { color: subtitleColor }]}>%</Text>
+                                        <TouchableOpacity
+                                            onPress={handleUpdate}
+                                            disabled={isSaving}
+                                            style={styles.editButton}
+                                        >
+                                            {isSaving ? (
+                                                <ActivityIndicator size="small" color="#10B981" />
+                                            ) : (
+                                                <Ionicons name="checkmark-circle" size={wp(5)} color="#10B981" />
+                                            )}
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => {
+                                                setEditingTarget(null);
+                                                setEditingMargin('');
+                                            }}
+                                            style={styles.editButton}
+                                        >
+                                            <Ionicons name="close-circle" size={wp(5)} color={colors.gray} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            ) : (
+                                <>
+                                    <View style={styles.targetItemContent}>
+                                        <Text style={[styles.targetCategory, { color: textColor }]}>
+                                            {target.category}
+                                        </Text>
+                                        <View style={[styles.targetBadge, { backgroundColor: '#10B981' + '20' }]}>
+                                            <Text style={[styles.targetBadgeText, { color: '#10B981' }]}>
+                                                {target.target_margin_percent}%
+                                            </Text>
+                                        </View>
+                                    </View>
+                                    <View style={styles.targetActions}>
+                                        <TouchableOpacity
+                                            onPress={() => handleEdit(target)}
+                                            style={styles.actionButton}
+                                        >
+                                            <Ionicons name="pencil" size={wp(4)} color={subtitleColor} />
+                                        </TouchableOpacity>
+                                        <TouchableOpacity
+                                            onPress={() => handleDelete(target.category)}
+                                            style={styles.actionButton}
+                                        >
+                                            <Ionicons name="trash-outline" size={wp(4)} color={colors.red} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </>
+                            )}
+                        </View>
+                    ))}
                 </View>
             )}
 
@@ -236,7 +462,7 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
                         }
                     ]}>
                         <FlatList
-                            data={categories}
+                            data={['Select category...', ...availableCategories]}
                             keyExtractor={(item) => item}
                             renderItem={({ item }) => (
                                 <TouchableOpacity
@@ -250,13 +476,17 @@ const CategoryTargetMargins: React.FC<CategoryTargetMarginsProps> = ({ onAddTarg
                                     ]}
                                     onPress={() => handleCategorySelect(item)}
                                 >
-                                    {selectedCategory === item && (
+                                    {selectedCategory === item && item !== 'Select category...' && (
                                         <Ionicons name="checkmark" size={wp(4)} color={colors.blue} style={styles.checkIcon} />
                                     )}
                                     <Text style={[
                                         styles.dropdownItemText,
-                                        { color: textColor },
-                                        selectedCategory === item && [
+                                        { 
+                                            color: item === 'Select category...' 
+                                                ? inputPlaceholderColor 
+                                                : textColor 
+                                        },
+                                        selectedCategory === item && item !== 'Select category...' && [
                                             styles.selectedItemText,
                                             { color: colors.blue }
                                         ]
@@ -486,6 +716,74 @@ const styles = StyleSheet.create({
     },
     selectedItemText: {
         fontFamily: FONT.semiBold,
+    },
+    loadingIndicator: {
+        marginLeft: wp(2),
+    },
+    targetItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: wp(4),
+        borderRadius: wp(2),
+        borderWidth: 1,
+        marginBottom: hp(1.5),
+    },
+    targetItemContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(3),
+        flex: 1,
+    },
+    targetCategory: {
+        fontSize: wp(3.8),
+        fontFamily: FONT.semiBold,
+    },
+    targetBadge: {
+        paddingHorizontal: wp(3),
+        paddingVertical: hp(0.5),
+        borderRadius: wp(2),
+    },
+    targetBadgeText: {
+        fontSize: wp(3.2),
+        fontFamily: FONT.semiBold,
+    },
+    targetActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(2),
+    },
+    actionButton: {
+        padding: wp(2),
+    },
+    targetItemEdit: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(2),
+    },
+    editInputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: wp(2),
+        flex: 1,
+        marginLeft: wp(3),
+    },
+    editInput: {
+        width: wp(20),
+        paddingVertical: hp(1),
+        paddingHorizontal: wp(3),
+        borderRadius: wp(2),
+        borderWidth: 1,
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
+    },
+    percentLabel: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
+    },
+    editButton: {
+        padding: wp(1),
     },
 });
 

@@ -40,6 +40,11 @@ export const API_CONFIG = {
             LIST: '/ingredients',
             BULK_DELETE: '/ingredients/bulk-delete',
         },
+        SETTINGS: {
+            BASE: '/settings',
+            CATEGORIES: '/settings/categories',
+            CATEGORY_TARGETS: '/settings/category-targets',
+        },
     },
 
     // Storage keys
