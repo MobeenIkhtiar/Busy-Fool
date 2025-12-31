@@ -519,21 +519,55 @@ const IngredientsScreen = () => {
 
             // Create file path
             const fileName = 'busy-fool-ingredients.csv';
-            const filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+            const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
 
             // Write CSV content to file
             await RNFS.writeFile(filePath, csvContent, 'utf8');
 
+            // Verify file exists
+            const fileExists = await RNFS.exists(filePath);
+            if (!fileExists) {
+                throw new Error('Failed to create CSV file');
+            }
+
             console.log('CSV file created at:', filePath);
 
-            // Share/save the file
-            await Share.open({
-                url: Platform.OS === 'ios' ? `file://${filePath}` : `file://${filePath}`,
-                type: 'text/csv',
-                filename: fileName,
-                title: 'Export Ingredients CSV',
-                message: 'Export ingredients data as CSV',
-            });
+            // Prepare share options based on platform
+            if (Platform.OS === 'android') {
+                // For Android, try file:// URI first
+                try {
+                    await Share.open({
+                        url: `file://${filePath}`,
+                        type: 'text/csv',
+                        filename: fileName,
+                        title: 'Export Ingredients CSV',
+                        message: 'Export ingredients data as CSV',
+                    });
+                } catch (androidError: any) {
+                    // If file:// URI fails, try using content:// or base64
+                    // For Android, we can also try sharing as base64
+                    const base64Content = await RNFS.readFile(filePath, 'base64');
+                    const dataUri = `data:text/csv;base64,${base64Content}`;
+                    
+                    await Share.open({
+                        url: dataUri,
+                        type: 'text/csv',
+                        filename: fileName,
+                        title: 'Export Ingredients CSV',
+                        message: 'Export ingredients data as CSV',
+                    });
+                }
+            } else {
+                // For iOS
+                const fileUri = `file://${filePath}`;
+                
+                await Share.open({
+                    url: fileUri,
+                    type: 'text/csv',
+                    filename: fileName,
+                    title: 'Export Ingredients CSV',
+                });
+            }
 
             Alert.alert('Success', 'CSV file exported successfully!');
         } catch (error: any) {
