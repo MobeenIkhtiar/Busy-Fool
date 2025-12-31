@@ -6,6 +6,7 @@ import ProductScreen from '../screens/drawerScreens/ProductScreen';
 import IngredientsScreen from '../screens/drawerScreens/IngredientsScreen';
 import AnalyticsScreen from '../screens/drawerScreens/AnalyticsScreen';
 import { wp } from '../constants/StyleGuide';
+import SettingsScreen from '../screens/drawerScreens/SettingsScreen';
 
 const Drawer = createDrawerNavigator();
 
@@ -25,6 +26,7 @@ const DrawerNavigator = () => (
         <Drawer.Screen name="Products" component={ProductScreen} />
         <Drawer.Screen name="Ingredients" component={IngredientsScreen} />
         <Drawer.Screen name="Analytics" component={AnalyticsScreen} />
+        <Drawer.Screen name="Settings" component={SettingsScreen} />
     </Drawer.Navigator>
 );
 

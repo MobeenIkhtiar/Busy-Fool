@@ -12,6 +12,7 @@ const menuItems = [
     { label: 'Products', iconName: 'coffee', iconType: 'image', route: 'Products' },
     { label: 'Ingredients', iconName: 'leaf-outline', iconType: 'ionicons', route: 'Ingredients' },
     { label: 'Analytics', iconName: 'bar-chart-outline', iconType: 'ionicons', route: 'Analytics' },
+    { label: 'Settings', iconName: 'settings-outline', iconType: 'ionicons', route: 'Settings' },
 ];
 
 const CustomDrawer: React.FC<DrawerContentComponentProps> = ({ navigation, state }) => {
