@@ -6,6 +6,7 @@ import UrgentAlertCard from '../../../components/UrgentAlertCard'
 import KPICard from '../../../components/KPICard'
 import SearchFilterSection from '../../../components/SearchFilterSection'
 import AddProductModal, { ProductFormData } from '../../../components/AddProductModal'
+import WhatIfModal from '../../../components/WhatIfModal'
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { hp, wp, FONT } from '../../../constants/StyleGuide';
 import { useTheme } from '../../../context/ThemeContext';
@@ -26,6 +27,8 @@ const ProductScreen = () => {
     const [error, setError] = useState<string | null>(null);
     const [showAddProductModal, setShowAddProductModal] = useState(false);
     const [isSubmittingProduct, setIsSubmittingProduct] = useState(false);
+    const [showWhatIfModal, setShowWhatIfModal] = useState(false);
+    const [whatIfProduct, setWhatIfProduct] = useState<Product | null>(null);
 
     // Fetch data from APIs
     const fetchData = useCallback(async () => {
@@ -150,7 +153,34 @@ const ProductScreen = () => {
 
     const handleFixNow = (productName: string) => {
         console.log(`Fix now clicked for ${productName}`);
-        // TODO: Implement what-if analysis modal
+        // Find the product and open What-If modal
+        const product = products.find(p => p.name === productName);
+        if (product) {
+            setWhatIfProduct(product);
+            setShowWhatIfModal(true);
+        }
+    };
+
+    const handleWhatIfPress = (product: Product) => {
+        setWhatIfProduct(product);
+        setShowWhatIfModal(true);
+    };
+
+    const handleApplyWhatIfChanges = (updatedProduct: Product) => {
+        // Update the product in the list, preserving numberOfSales
+        setProducts((prev) =>
+            prev.map((p) =>
+                p.id === updatedProduct.id
+                    ? {
+                          ...updatedProduct,
+                          numberOfSales: p.numberOfSales || 0,
+                          quantity_sold: p.quantity_sold,
+                      }
+                    : p
+            )
+        );
+        // Refresh data to get latest from API
+        fetchData();
     };
 
     const handleAddProduct = async (formData: ProductFormData) => {
@@ -348,7 +378,11 @@ const ProductScreen = () => {
                     filteredProducts.map((mappedProduct, index) => {
                         const originalProduct = filteredProductsRaw[index];
                         return (
-                            <ProductCard key={originalProduct?.id || index} product={mappedProduct} />
+                            <ProductCard 
+                                key={originalProduct?.id || index} 
+                                product={mappedProduct}
+                                onWhatIfPress={() => originalProduct && handleWhatIfPress(originalProduct)}
+                            />
                         );
                     })
                 )}
@@ -361,6 +395,17 @@ const ProductScreen = () => {
                 onSubmit={handleAddProduct}
                 ingredients={ingredients}
                 isSubmitting={isSubmittingProduct}
+            />
+
+            {/* What-If Modal */}
+            <WhatIfModal
+                visible={showWhatIfModal}
+                onClose={() => {
+                    setShowWhatIfModal(false);
+                    setWhatIfProduct(null);
+                }}
+                product={whatIfProduct}
+                onApplyChanges={handleApplyWhatIfChanges}
             />
         </View>
     )

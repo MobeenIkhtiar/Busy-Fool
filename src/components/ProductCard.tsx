@@ -24,9 +24,10 @@ interface ProductCardProps {
             cost: number;
         }>;
     };
+    onWhatIfPress?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onWhatIfPress }) => {
     const { colors, theme } = useTheme();
     const [showIngredients, setShowIngredients] = useState(false);
     const isProfitable = product.isProfitable;
@@ -197,7 +198,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </Animatable.View>
 
                 <View style={styles.actionButtons}>
-                    <TouchableOpacity style={styles.whatIfButton}>
+                    <TouchableOpacity 
+                        style={styles.whatIfButton}
+                        onPress={onWhatIfPress}
+                    >
                         <Icon name="calculate" size={16} color={colors.white} />
                         <Text style={styles.whatIfText}>What-If</Text>
                     </TouchableOpacity>
