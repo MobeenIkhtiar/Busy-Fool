@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View, Text, TouchableOpacity, Image, ActivityIndicator, Alert } from 'react-native'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useMemo } from 'react'
 import TopBar from '../../../components/TopBar'
 import ProductCard from '../../../components/ProductCard'
 import UrgentAlertCard from '../../../components/UrgentAlertCard'
@@ -20,6 +20,7 @@ const ProductScreen = () => {
     const [searchValue, setSearchValue] = useState('');
     const [categoryFilter, setCategoryFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('margin');
     const [products, setProducts] = useState<Product[]>([]);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
     // Stock endpoint doesn't exist on backend (404), so we'll skip it for now
@@ -260,19 +261,45 @@ const ProductScreen = () => {
         };
     };
 
-    // Filter products based on search and filters
-    const getFilteredProducts = () => {
-        return products.filter((product) => {
-            const matchesSearch = product.name.toLowerCase().includes(searchValue.toLowerCase());
-            const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
-            // API returns: 'profitable', 'breaking even', 'losing money'
-            const matchesStatus = statusFilter === 'all' || product.status === statusFilter.toLowerCase();
-            return matchesSearch && matchesCategory && matchesStatus;
+    // Filter and sort products using useMemo for performance
+    const { filteredProductsRaw, filteredProducts } = useMemo(() => {
+        // Filter products based on search and filters
+        let filtered = products.filter((product) => {
+            // Search filter - case-insensitive, partial match on product name only
+            const nameMatch = product.name.toLowerCase().includes(searchValue.toLowerCase());
+            
+            // Category filter
+            const categoryMatch = categoryFilter === 'all' || product.category === categoryFilter;
+            
+            // Status filter - API returns: 'profitable', 'breaking even', 'losing money'
+            const statusMatch = statusFilter === 'all' || product.status === statusFilter.toLowerCase();
+            
+            return nameMatch && categoryMatch && statusMatch;
         });
-    };
 
-    const filteredProductsRaw = getFilteredProducts();
-    const filteredProducts = filteredProductsRaw.map(mapProductToCardFormat);
+        // Sort filtered products
+        filtered = [...filtered].sort((a, b) => {
+            switch (sortBy) {
+                case 'margin':
+                    return (Number(b.margin_percent) || 0) - (Number(a.margin_percent) || 0);
+                case 'sales':
+                    return (Number(b.quantity_sold) || 0) - (Number(a.quantity_sold) || 0);
+                case 'price':
+                    return (Number(b.sell_price) || 0) - (Number(a.sell_price) || 0);
+                case 'name':
+                    return a.name.localeCompare(b.name);
+                case 'impact':
+                    const impactA = (Number(a.margin_amount) || 0) * (Number(a.quantity_sold) || 0);
+                    const impactB = (Number(b.margin_amount) || 0) * (Number(b.quantity_sold) || 0);
+                    return impactB - impactA;
+                default:
+                    return 0;
+            }
+        });
+
+        const mapped = filtered.map(mapProductToCardFormat);
+        return { filteredProductsRaw: filtered, filteredProducts: mapped };
+    }, [products, searchValue, categoryFilter, statusFilter, sortBy]);
 
     return (
         <View style={[styles.container, { backgroundColor: colors.primary }]}>
@@ -355,6 +382,8 @@ const ProductScreen = () => {
                     onCategoryFilterChange={setCategoryFilter}
                     statusFilter={statusFilter}
                     onStatusFilterChange={setStatusFilter}
+                    sortBy={sortBy}
+                    onSortChange={setSortBy}
                 />
 
                 {/* Products List */}
