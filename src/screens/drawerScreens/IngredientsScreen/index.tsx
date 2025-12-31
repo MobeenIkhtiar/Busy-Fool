@@ -11,7 +11,6 @@ import EditIngredientModal from '../../../components/EditIngredientModal'
 import { useNavigation, useFocusEffect } from '@react-navigation/native'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import { pick } from '@react-native-documents/picker'
-import Share from 'react-native-share'
 import RNFS from 'react-native-fs'
 import { fileService, ingredientsService, ApiError, Ingredient, UpdateIngredientRequest } from '../../../services'
 
@@ -517,9 +516,28 @@ const IngredientsScreen = () => {
                 ...csvRows,
             ].join('\n');
 
-            // Create file path
+            // Create file path - save to Downloads (Android) or Documents (iOS)
             const fileName = 'busy-fool-ingredients.csv';
-            const filePath = `${RNFS.CachesDirectoryPath}/${fileName}`;
+            let filePath: string;
+
+            if (Platform.OS === 'android') {
+                // For Android, save to Downloads directory
+                try {
+                    const downloadsDir = RNFS.DownloadDirectoryPath || `${RNFS.ExternalDirectoryPath}/Download`;
+                    // Ensure directory exists
+                    const dirExists = await RNFS.exists(downloadsDir);
+                    if (!dirExists) {
+                        await RNFS.mkdir(downloadsDir);
+                    }
+                    filePath = `${downloadsDir}/${fileName}`;
+                } catch (error) {
+                    // Fallback to ExternalDirectoryPath if Downloads is not accessible
+                    filePath = `${RNFS.ExternalDirectoryPath}/${fileName}`;
+                }
+            } else {
+                // For iOS, save to Documents directory (accessible via Files app)
+                filePath = `${RNFS.DocumentDirectoryPath}/${fileName}`;
+            }
 
             // Write CSV content to file
             await RNFS.writeFile(filePath, csvContent, 'utf8');
@@ -530,46 +548,18 @@ const IngredientsScreen = () => {
                 throw new Error('Failed to create CSV file');
             }
 
-            console.log('CSV file created at:', filePath);
+            console.log('CSV file saved at:', filePath);
 
-            // Prepare share options based on platform
-            if (Platform.OS === 'android') {
-                // For Android, try file:// URI first
-                try {
-                    await Share.open({
-                        url: `file://${filePath}`,
-                        type: 'text/csv',
-                        filename: fileName,
-                        title: 'Export Ingredients CSV',
-                        message: 'Export ingredients data as CSV',
-                    });
-                } catch (androidError: any) {
-                    // If file:// URI fails, try using content:// or base64
-                    // For Android, we can also try sharing as base64
-                    const base64Content = await RNFS.readFile(filePath, 'base64');
-                    const dataUri = `data:text/csv;base64,${base64Content}`;
-                    
-                    await Share.open({
-                        url: dataUri,
-                        type: 'text/csv',
-                        filename: fileName,
-                        title: 'Export Ingredients CSV',
-                        message: 'Export ingredients data as CSV',
-                    });
-                }
-            } else {
-                // For iOS
-                const fileUri = `file://${filePath}`;
-                
-                await Share.open({
-                    url: fileUri,
-                    type: 'text/csv',
-                    filename: fileName,
-                    title: 'Export Ingredients CSV',
-                });
-            }
-
-            Alert.alert('Success', 'CSV file exported successfully!');
+            // Show success message with file location
+            const locationMessage = Platform.OS === 'android' 
+                ? 'CSV file saved to Downloads folder\n\nYou can find it in your device\'s Downloads folder or file manager.'
+                : 'CSV file saved to Documents folder\n\nYou can access it via the Files app on your device.';
+            
+            Alert.alert(
+                'Success', 
+                `${locationMessage}\n\nFile: ${fileName}`,
+                [{ text: 'OK' }]
+            );
         } catch (error: any) {
             // Check if user cancelled
             if (error?.message?.includes('User did not share') || error?.message?.includes('cancel')) {
