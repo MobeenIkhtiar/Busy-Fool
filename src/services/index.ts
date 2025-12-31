@@ -7,7 +7,7 @@ export { default as ingredientsService } from './ingredientsService';
 export { default as settingsService } from './settingsService';
 
 // Export types
-export type { LoginRequest, SignupRequest, AuthResponse, ApiError } from './authService';
+export type { LoginRequest, SignupRequest, AuthResponse, Profile, UpdateProfileRequest, ApiError } from './authService';
 export type { User, UpdateUserRequest } from './userService';
 export type { FileUploadResponse } from './fileService';
 export type { Ingredient, UpdateIngredientRequest, BulkDeleteRequest, BulkDeleteResponse } from './ingredientsService';

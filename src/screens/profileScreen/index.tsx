@@ -1,18 +1,50 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { hp, wp, FONT } from '../../constants/StyleGuide';
 import { useTheme } from '../../context/ThemeContext';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import EditProfileModal, { ProfileFormData } from '../../components/EditProfileModal';
+import { authService, Profile, ApiError } from '../../services';
 
 const ProfileScreen = () => {
     const { colors, theme } = useTheme();
     const navigation = useNavigation();
     const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
     
     // Card background: white in light mode, dark in dark mode
     const cardBg = theme === 'light' ? colors.white : colors.primary;
+
+    // Fetch profile data
+    const fetchProfile = async () => {
+        setIsLoading(true);
+        try {
+            const profileData = await authService.getProfile();
+            setProfile(profileData);
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            console.error('Error fetching profile:', apiError);
+            // Don't show alert on initial load, just log the error
+            if (apiError.status === 401) {
+                // Token expired, user will be redirected to login
+                console.log('Token expired, user needs to login');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchProfile();
+        }, [])
+    );
 
     const handleEditProfile = () => {
         setIsEditProfileVisible(true);
@@ -20,12 +52,32 @@ const ProfileScreen = () => {
 
     const handleCloseEditProfile = () => {
         setIsEditProfileVisible(false);
+        // Refresh profile after closing modal
+        fetchProfile();
     };
 
-    const handleUpdateProfile = (data: ProfileFormData) => {
-        console.log('Profile updated:', data);
-        // TODO: Integrate with API to update profile
-        setIsEditProfileVisible(false);
+    const handleUpdateProfile = async (data: ProfileFormData) => {
+        try {
+            const updateData = {
+                name: data.fullName,
+                phoneNumber: data.phoneNumber || undefined,
+                dateOfBirth: data.dateOfBirth || undefined,
+                address: data.address || undefined,
+                bio: data.bio || undefined,
+            };
+            
+            const updatedProfile = await authService.updateProfile(
+                updateData,
+                data.profileImage
+            );
+            
+            setProfile(updatedProfile);
+            Alert.alert('Success', 'Profile updated successfully!');
+            setIsEditProfileVisible(false);
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            Alert.alert('Error', apiError.message || 'Failed to update profile. Please try again.');
+        }
     };
     
     const ProfileIcon = () => (
@@ -90,16 +142,36 @@ const ProfileScreen = () => {
                     <View style={[styles.headerSection, { backgroundColor: colors.brown }]}>
                         <View style={styles.headerLeft}>
                             <View style={styles.profileImageContainer}>
-                                <Image
-                                    source={{ uri: 'https://via.placeholder.com/60x60/4CAF50/FFFFFF?text=JD' }}
-                                    style={styles.profileImage}
-                                />
+                                {isLoading ? (
+                                    <View style={[styles.profileImage, { backgroundColor: colors.lightgray, justifyContent: 'center', alignItems: 'center' }]}>
+                                        <ActivityIndicator size="small" color={colors.white} />
+                                    </View>
+                                ) : (
+                                    <Image
+                                        source={{ 
+                                            uri: profile?.profilePicture || 'https://via.placeholder.com/60x60/4CAF50/FFFFFF?text=JD' 
+                                        }}
+                                        style={styles.profileImage}
+                                    />
+                                )}
                                 <View style={[styles.onlineIndicator, { backgroundColor: colors.green, borderColor: colors.white }]} />
                             </View>
                             <View style={styles.userInfo}>
-                                <Text style={[styles.userName, { color: colors.white }]}>John Doe</Text>
-                                <Text style={[styles.userEmail, { color: colors.white }]}>john.doe@example.com</Text>
-                                <Text style={[styles.userType, { color: colors.white }]}>Premium User</Text>
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color={colors.white} />
+                                ) : (
+                                    <>
+                                        <Text style={[styles.userName, { color: colors.white }]}>
+                                            {profile?.name || 'Loading...'}
+                                        </Text>
+                                        <Text style={[styles.userEmail, { color: colors.white }]}>
+                                            {profile?.email || 'Loading...'}
+                                        </Text>
+                                        <Text style={[styles.userType, { color: colors.white }]}>
+                                            {profile?.role || 'User'}
+                                        </Text>
+                                    </>
+                                )}
                             </View>
                         </View>
                     </View>
@@ -154,13 +226,14 @@ const ProfileScreen = () => {
                 visible={isEditProfileVisible}
                 onClose={handleCloseEditProfile}
                 onSubmit={handleUpdateProfile}
-                initialData={{
-                    fullName: 'Test user',
-                    phoneNumber: '+1 (555) 000-0000',
-                    dateOfBirth: '',
-                    address: '',
-                    bio: '',
-                }}
+                initialData={profile ? {
+                    fullName: profile.name || '',
+                    phoneNumber: profile.phoneNumber || '',
+                    dateOfBirth: profile.dateOfBirth || '',
+                    address: profile.address || '',
+                    bio: profile.bio || '',
+                    profileImage: profile.profilePicture,
+                } : undefined}
             />
         </ScrollView>
     );

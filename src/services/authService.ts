@@ -1,6 +1,7 @@
 import apiService from './api';
 import { API_CONFIG } from './config';
 import { testNetworkConnectivity, getNetworkInfo } from './networkUtils';
+import { AxiosResponse } from 'axios';
 
 // Types for authentication
 export interface LoginRequest {
@@ -20,6 +21,28 @@ export interface AuthResponse {
     fullName: string;
     email: string;
     role: string;
+}
+
+export interface Profile {
+    id: number;
+    name: string;
+    email: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    address?: string;
+    bio?: string;
+    profilePicture?: string;
+    role: string;
+    joinDate?: string;
+}
+
+export interface UpdateProfileRequest {
+    name?: string;
+    phoneNumber?: string;
+    dateOfBirth?: string;
+    address?: string;
+    bio?: string;
+    profilePicture?: any; // File object for FormData
 }
 
 export interface ApiError {
@@ -109,13 +132,75 @@ class AuthService {
     }
 
     // Get user profile (for auto-login check on app refresh)
-    async getProfile(): Promise<any> {
+    async getProfile(): Promise<Profile> {
         try {
-            const response = await apiService.get(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
+            const response = await apiService.get<Profile>(API_CONFIG.ENDPOINTS.AUTH.PROFILE);
             console.log('GetProfile response:', response);
             return response.data;
         } catch (error: any) {
             console.error('Error getting profile:', error);
+            throw this.handleError(error);
+        }
+    }
+
+    // Update user profile
+    async updateProfile(profileData: UpdateProfileRequest, profilePictureUri?: string): Promise<Profile> {
+        try {
+            let response: AxiosResponse<Profile>;
+            
+            // If profile picture is provided, use FormData
+            if (profilePictureUri) {
+                const formData = new FormData();
+                
+                // Append profile picture
+                formData.append('profilePicture', {
+                    uri: profilePictureUri,
+                    type: 'image/jpeg',
+                    name: 'profile_picture.jpg',
+                } as any);
+                
+                // Append other fields
+                if (profileData.name) formData.append('name', profileData.name);
+                // phoneNumber can be null (backend accepts string | null)
+                // For FormData, send empty string if null, backend will handle it
+                if (profileData.phoneNumber !== undefined) {
+                    formData.append('phoneNumber', profileData.phoneNumber || '');
+                }
+                if (profileData.dateOfBirth) formData.append('dateOfBirth', profileData.dateOfBirth);
+                if (profileData.address) formData.append('address', profileData.address);
+                if (profileData.bio) formData.append('bio', profileData.bio);
+                
+                response = await apiService.patch<Profile>(
+                    API_CONFIG.ENDPOINTS.AUTH.PROFILE,
+                    formData,
+                    {
+                        headers: {
+                            'Content-Type': 'multipart/form-data',
+                        },
+                    }
+                );
+            } else {
+                // No image, use JSON
+                const jsonData: any = {};
+                if (profileData.name) jsonData.name = profileData.name;
+                // phoneNumber can be null (backend accepts string | null)
+                if (profileData.phoneNumber !== undefined) {
+                    jsonData.phoneNumber = profileData.phoneNumber || null;
+                }
+                if (profileData.dateOfBirth) jsonData.dateOfBirth = profileData.dateOfBirth;
+                if (profileData.address) jsonData.address = profileData.address;
+                if (profileData.bio) jsonData.bio = profileData.bio;
+                
+                response = await apiService.patch<Profile>(
+                    API_CONFIG.ENDPOINTS.AUTH.PROFILE,
+                    jsonData
+                );
+            }
+            
+            console.log('UpdateProfile response:', response);
+            return response.data;
+        } catch (error: any) {
+            console.error('Error updating profile:', error);
             throw this.handleError(error);
         }
     }
