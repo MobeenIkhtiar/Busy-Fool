@@ -1,16 +1,32 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
 import { hp, wp, FONT } from '../../constants/StyleGuide';
 import { useTheme } from '../../context/ThemeContext';
 import { useNavigation } from '@react-navigation/native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
+import EditProfileModal, { ProfileFormData } from '../../components/EditProfileModal';
 
 const ProfileScreen = () => {
     const { colors, theme } = useTheme();
     const navigation = useNavigation();
+    const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
     
     // Card background: white in light mode, dark in dark mode
     const cardBg = theme === 'light' ? colors.white : colors.primary;
+
+    const handleEditProfile = () => {
+        setIsEditProfileVisible(true);
+    };
+
+    const handleCloseEditProfile = () => {
+        setIsEditProfileVisible(false);
+    };
+
+    const handleUpdateProfile = (data: ProfileFormData) => {
+        console.log('Profile updated:', data);
+        // TODO: Integrate with API to update profile
+        setIsEditProfileVisible(false);
+    };
     
     const ProfileIcon = () => (
         <View style={[styles.profileIcon, { backgroundColor: colors.lightBlue }]}>
@@ -90,7 +106,10 @@ const ProfileScreen = () => {
 
                     {/* Menu Section */}
                     <View style={[styles.menuSection, { backgroundColor: cardBg }]}>
-                        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
+                        <TouchableOpacity 
+                            style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}
+                            onPress={handleEditProfile}
+                        >
                             <ProfileIcon />
                             <View style={styles.menuItemContent}>
                                 <Text style={[styles.menuItemTitle, { color: colors.black }]}>My Profile</Text>
@@ -129,6 +148,20 @@ const ProfileScreen = () => {
                     </View>
                 </View>
             </View>
+
+            {/* Edit Profile Modal */}
+            <EditProfileModal
+                visible={isEditProfileVisible}
+                onClose={handleCloseEditProfile}
+                onSubmit={handleUpdateProfile}
+                initialData={{
+                    fullName: 'Test user',
+                    phoneNumber: '+1 (555) 000-0000',
+                    dateOfBirth: '',
+                    address: '',
+                    bio: '',
+                }}
+            />
         </ScrollView>
     );
 };
