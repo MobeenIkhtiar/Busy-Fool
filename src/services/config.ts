@@ -46,6 +46,15 @@ export const API_CONFIG = {
             CATEGORIES: '/settings/categories',
             CATEGORY_TARGETS: '/settings/category-targets',
         },
+        PRODUCTS: {
+            LIST: '/products',
+            WHAT_IF: '/products/what-if',
+            MILK_SWAP: '/products/milk-swap',
+            QUICK_ACTION: (id: string | number) => `/products/${id}/quick-action`,
+        },
+        STOCK: {
+            LIST: '/stock',
+        },
     },
 
     // Storage keys
