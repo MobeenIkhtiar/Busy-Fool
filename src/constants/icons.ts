@@ -1,5 +1,5 @@
 export const icons = {
-    logo: require('../assets/icons/logo.png'),
+    logo: require('../assets/icons/logo.jpeg'),
     drawer: require('../assets/icons/drawer.png'),
     notification: require('../assets/icons/bell.png'),
     coffee: require('../assets/icons/coffee.png'),

@@ -1,6 +1,6 @@
 export const API_CONFIG = {
     // Base URL - Change this to your actual API URL
-    BASE_URL: 'https://busy-fool-backend-1-0.onrender.com',
+    BASE_URL: 'https://busy-fool-backend-1mwl.onrender.com/',
 
     // Timeout settings
     TIMEOUT: 10000,
@@ -25,12 +25,36 @@ export const API_CONFIG = {
             RESET_PASSWORD: '/auth/reset-password',
             CHANGE_PASSWORD: '/auth/change-password',
             ME: '/auth/me',
+            PROFILE: '/auth/profile',
+            UPLOAD_PROFILE_PICTURE: '/auth/upload-profile-picture',
         },
         USER: {
             PROFILE: '/user/profile',
             PROFILE_PICTURE: '/user/profile-picture',
             PREFERENCES: '/user/preferences',
             ACCOUNT: '/user/account',
+        },
+        MINDEE: {
+            UPLOAD: '/mindee/upload',
+        },
+        INGREDIENTS: {
+            LIST: '/ingredients',
+            BULK_DELETE: '/ingredients/bulk-delete',
+            IMPORT_CSV: '/ingredients/import-csv',
+        },
+        SETTINGS: {
+            BASE: '/settings',
+            CATEGORIES: '/settings/categories',
+            CATEGORY_TARGETS: '/settings/category-targets',
+        },
+        PRODUCTS: {
+            LIST: '/products',
+            WHAT_IF: '/products/what-if',
+            MILK_SWAP: '/products/milk-swap',
+            QUICK_ACTION: (id: string | number) => `/products/${id}/quick-action`,
+        },
+        STOCK: {
+            LIST: '/stock',
         },
     },
 

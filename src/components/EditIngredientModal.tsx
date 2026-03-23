@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     Text,
@@ -15,61 +15,58 @@ import { FONT, wp, hp } from '../constants/StyleGuide';
 import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
 
-interface AddIngredientModalProps {
+interface EditIngredientModalProps {
     visible: boolean;
     onClose: () => void;
-    onSubmit: (data: IngredientFormData) => void;
+    onSubmit: (data: EditIngredientFormData) => void;
+    ingredient: {
+        id: string;
+        name: string;
+        unit: string;
+        quantity: number;
+        cost: number;
+        waste?: number;
+        supplier?: string;
+    } | null;
 }
 
-interface IngredientFormData {
+interface EditIngredientFormData {
     name: string;
-    category: string;
     unit: string;
-    packageSize: string;
-    purchasePrice: string;
-    wastePercentage: string;
+    quantity: string;
+    purchase_price: string;
+    waste_percent: string;
     supplier: string;
-    currentStockLevel: string;
 }
 
 interface ValidationErrors {
     name?: string;
-    category?: string;
-    purchasePrice?: string;
+    unit?: string;
+    quantity?: string;
+    purchase_price?: string;
+    waste_percent?: string;
+    supplier?: string;
 }
 
-const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
+const EditIngredientModal: React.FC<EditIngredientModalProps> = ({
     visible,
     onClose,
     onSubmit,
+    ingredient,
 }) => {
     const { colors } = useTheme();
-    const [formData, setFormData] = useState<IngredientFormData>({
+    const [formData, setFormData] = useState<EditIngredientFormData>({
         name: '',
-        category: '',
         unit: '',
-        packageSize: '1',
-        purchasePrice: '0.00',
-        wastePercentage: '',
+        quantity: '',
+        purchase_price: '',
+        waste_percent: '',
         supplier: '',
-        currentStockLevel: '',
     });
 
-    const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
     const [showUnitDropdown, setShowUnitDropdown] = useState(false);
     const [showSupplierDropdown, setShowSupplierDropdown] = useState(false);
     const [validationErrors, setValidationErrors] = useState<ValidationErrors>({});
-
-    const categories = [
-        'Coffee',
-        'Dairy',
-        'Flavoring',
-        'Sweetener',
-        'Tea',
-        'Syrup',
-        'Topping',
-        'Other'
-    ];
 
     const units = [
         'kg',
@@ -79,7 +76,8 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
         'oz',
         'lb',
         'pcs',
-        'pack'
+        'pack',
+        'unit'
     ];
 
     const suppliers = [
@@ -89,14 +87,40 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
         'Sweet Supply Co.',
         'Premium Ingredients',
         'Local Market',
+        'Allan Reeder Ltd.',
+        'Galeta Limited',
+        'Brakes',
         'Other'
     ];
 
-    const handleInputChange = (field: keyof IngredientFormData, value: string) => {
+    // Pre-fill form when ingredient changes
+    useEffect(() => {
+        if (ingredient) {
+            setFormData({
+                name: ingredient.name || '',
+                unit: ingredient.unit || '',
+                quantity: ingredient.quantity?.toString() || '',
+                purchase_price: ingredient.cost?.toString() || '',
+                waste_percent: ingredient.waste?.toString() || '',
+                supplier: ingredient.supplier || '',
+            });
+            setValidationErrors({});
+        }
+    }, [ingredient]);
+
+    const handleInputChange = (field: keyof EditIngredientFormData, value: string) => {
         setFormData(prev => ({
             ...prev,
             [field]: value
         }));
+        // Clear error for this field when user starts typing
+        if (validationErrors[field]) {
+            setValidationErrors(prev => {
+                const newErrors = { ...prev };
+                delete newErrors[field];
+                return newErrors;
+            });
+        }
     };
 
     const handleSubmit = () => {
@@ -109,11 +133,20 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
         if (!formData.name.trim()) {
             errors.name = 'Name is required';
         }
-        if (!formData.category) {
-            errors.category = 'Category is required';
+        if (!formData.unit) {
+            errors.unit = 'Unit is required';
         }
-        if (!formData.purchasePrice || parseFloat(formData.purchasePrice) <= 0) {
-            errors.purchasePrice = 'Purchase Price is required and must be greater than 0';
+        if (!formData.quantity || parseFloat(formData.quantity) <= 0) {
+            errors.quantity = 'Quantity is required and must be greater than 0';
+        }
+        if (!formData.purchase_price || parseFloat(formData.purchase_price) <= 0) {
+            errors.purchase_price = 'Purchase Price is required and must be greater than 0';
+        }
+        if (!formData.waste_percent || parseFloat(formData.waste_percent) < 0) {
+            errors.waste_percent = 'Waste % is required and must be 0 or greater';
+        }
+        if (!formData.supplier.trim()) {
+            errors.supplier = 'Supplier is required';
         }
 
         // If there are validation errors, display them and return
@@ -123,19 +156,6 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
         }
 
         onSubmit(formData);
-        onClose();
-        // Reset form
-        setFormData({
-            name: '',
-            category: '',
-            unit: '',
-            packageSize: '1',
-            purchasePrice: '0.00',
-            wastePercentage: '',
-            supplier: '',
-            currentStockLevel: '',
-        });
-        setValidationErrors({});
     };
 
     const renderDropdown = (
@@ -203,6 +223,8 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
         </View>
     );
 
+    if (!ingredient) return null;
+
     return (
         <Modal
             visible={visible}
@@ -218,12 +240,12 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                     <View style={styles.modalContent}>
                         {/* Header */}
                         <View style={styles.header}>
-                            <TouchableOpacity style={styles.closeButton} onPress={onClose}>
-                                <Text style={[styles.closeButtonText, { color: colors.black }]}>×</Text>
-                            </TouchableOpacity>
-                            <Text style={[styles.title, { color: colors.brown }]}>Add New Ingredient</Text>
-                            <Text style={[styles.subtitle, { color: colors.black }]}>Add a new ingredient with waste-aware costing</Text>
-
+                            <View style={styles.headerTop}>
+                                <Text style={[styles.title, { color: colors.brown }]}>Edit Ingredient</Text>
+                                <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+                                    <Text style={[styles.closeButtonText, { color: colors.black }]}>×</Text>
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Form */}
@@ -249,76 +271,82 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                 )}
                             </View>
 
-                            {/* Category */}
+                            {/* Unit */}
                             {renderDropdown(
-                                'Category',
-                                formData.category,
-                                categories,
-                                showCategoryDropdown,
-                                () => setShowCategoryDropdown(!showCategoryDropdown),
-                                (value) => handleInputChange('category', value),
+                                'Unit',
+                                formData.unit,
+                                units,
+                                showUnitDropdown,
+                                () => setShowUnitDropdown(!showUnitDropdown),
+                                (value) => handleInputChange('unit', value),
                                 true,
-                                validationErrors.category
+                                validationErrors.unit
                             )}
 
-                            {/* Unit and Package Size Row */}
-                            <View style={styles.rowContainer}>
-                                <View style={[styles.inputContainer, styles.halfWidth]}>
-                                    {renderDropdown(
-                                        'Unit',
-                                        formData.unit,
-                                        units,
-                                        showUnitDropdown,
-                                        () => setShowUnitDropdown(!showUnitDropdown),
-                                        (value) => handleInputChange('unit', value)
-                                    )}
-                                </View>
-                                <View style={[styles.inputContainer, styles.halfWidth]}>
-                                    <Text style={[styles.label, { color: colors.brown }]}>Package Size</Text>
-                                    <TextInput
-                                        style={[styles.textInput, { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black }]}
-                                        placeholder="1"
-                                        placeholderTextColor={colors.gray}
-                                        value={formData.packageSize}
-                                        onChangeText={(value) => handleInputChange('packageSize', value)}
-                                        keyboardType="numeric"
-                                    />
-                                </View>
-                            </View>
-
-                            {/* Purchase Price */}
+                            {/* Quantity */}
                             <View style={styles.inputContainer}>
                                 <Text style={[styles.label, { color: colors.brown }]}>
-                                    Purchase Price ($)<Text style={[styles.required, { color: colors.red }]}>*</Text>
+                                    Quantity<Text style={[styles.required, { color: colors.red }]}>*</Text>
                                 </Text>
                                 <TextInput
                                     style={[
                                         styles.textInput,
                                         { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black },
-                                        validationErrors.purchasePrice && [styles.inputError, { borderColor: colors.red }]
+                                        validationErrors.quantity && [styles.inputError, { borderColor: colors.red }]
                                     ]}
                                     placeholder="0.00"
                                     placeholderTextColor={colors.gray}
-                                    value={formData.purchasePrice}
-                                    onChangeText={(value) => handleInputChange('purchasePrice', value)}
-                                    keyboardType="numeric"
+                                    value={formData.quantity}
+                                    onChangeText={(value) => handleInputChange('quantity', value)}
+                                    keyboardType="decimal-pad"
                                 />
-                                {validationErrors.purchasePrice && (
-                                    <Text style={[styles.errorText, { color: colors.red }]}>{validationErrors.purchasePrice}</Text>
+                                {validationErrors.quantity && (
+                                    <Text style={[styles.errorText, { color: colors.red }]}>{validationErrors.quantity}</Text>
+                                )}
+                            </View>
+
+                            {/* Purchase Price */}
+                            <View style={styles.inputContainer}>
+                                <Text style={[styles.label, { color: colors.brown }]}>
+                                    Purchase Price (£)<Text style={[styles.required, { color: colors.red }]}>*</Text>
+                                </Text>
+                                <TextInput
+                                    style={[
+                                        styles.textInput,
+                                        { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black },
+                                        validationErrors.purchase_price && [styles.inputError, { borderColor: colors.red }]
+                                    ]}
+                                    placeholder="0.00"
+                                    placeholderTextColor={colors.gray}
+                                    value={formData.purchase_price}
+                                    onChangeText={(value) => handleInputChange('purchase_price', value)}
+                                    keyboardType="decimal-pad"
+                                />
+                                {validationErrors.purchase_price && (
+                                    <Text style={[styles.errorText, { color: colors.red }]}>{validationErrors.purchase_price}</Text>
                                 )}
                             </View>
 
                             {/* Waste Percentage */}
                             <View style={styles.inputContainer}>
-                                <Text style={[styles.label, { color: colors.brown }]}>Waste %</Text>
+                                <Text style={[styles.label, { color: colors.brown }]}>
+                                    Waste %<Text style={[styles.required, { color: colors.red }]}>*</Text>
+                                </Text>
                                 <TextInput
-                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black }]}
-                                    placeholder="5"
+                                    style={[
+                                        styles.textInput,
+                                        { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black },
+                                        validationErrors.waste_percent && [styles.inputError, { borderColor: colors.red }]
+                                    ]}
+                                    placeholder="5.00"
                                     placeholderTextColor={colors.gray}
-                                    value={formData.wastePercentage}
-                                    onChangeText={(value) => handleInputChange('wastePercentage', value)}
-                                    keyboardType="numeric"
+                                    value={formData.waste_percent}
+                                    onChangeText={(value) => handleInputChange('waste_percent', value)}
+                                    keyboardType="decimal-pad"
                                 />
+                                {validationErrors.waste_percent && (
+                                    <Text style={[styles.errorText, { color: colors.red }]}>{validationErrors.waste_percent}</Text>
+                                )}
                             </View>
 
                             {/* Supplier */}
@@ -328,29 +356,18 @@ const AddIngredientModal: React.FC<AddIngredientModalProps> = ({
                                 suppliers,
                                 showSupplierDropdown,
                                 () => setShowSupplierDropdown(!showSupplierDropdown),
-                                (value) => handleInputChange('supplier', value)
+                                (value) => handleInputChange('supplier', value),
+                                true,
+                                validationErrors.supplier
                             )}
-
-                            {/* Current Stock Level */}
-                            <View style={styles.inputContainer}>
-                                <Text style={[styles.label, { color: colors.brown }]}>Current Stock Level</Text>
-                                <TextInput
-                                    style={[styles.textInput, { borderColor: colors.brown, backgroundColor: colors.primary, color: colors.black }]}
-                                    placeholder="0"
-                                    placeholderTextColor={colors.gray}
-                                    value={formData.currentStockLevel}
-                                    onChangeText={(value) => handleInputChange('currentStockLevel', value)}
-                                    keyboardType="numeric"
-                                />
-                            </View>
 
                             {/* Action Buttons */}
                             <View style={[styles.actionButtons, { borderTopColor: colors.lightgray }]}>
-                                <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.white, borderColor: colors.lightgray }]} onPress={onClose}>
-                                    <Text style={[styles.cancelButtonText, { color: '#000000' }]}>Cancel</Text>
+                                <TouchableOpacity style={[styles.cancelButton, { backgroundColor: colors.white, borderColor: colors.brown }]} onPress={onClose}>
+                                    <Text style={[styles.cancelButtonText, { color: colors.brown }]}>Cancel</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity style={[styles.submitButton, { backgroundColor: colors.brown }]} onPress={handleSubmit}>
-                                    <Text style={[styles.submitButtonText, { color: colors.white }]}>Add Ingredient</Text>
+                                    <Text style={[styles.submitButtonText, { color: colors.white }]}>Update Ingredient</Text>
                                 </TouchableOpacity>
                             </View>
                         </ScrollView>
@@ -371,7 +388,6 @@ const styles = StyleSheet.create({
         flex: 1,
         borderRadius: wp(3),
         paddingTop: hp(4),
-        
     },
     modalContent: {
         flex: 1,
@@ -381,22 +397,20 @@ const styles = StyleSheet.create({
         paddingTop: hp(3),
         paddingBottom: hp(1),
     },
+    headerTop: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+    },
     title: {
         fontSize: wp(5),
         fontFamily: FONT.bold,
-        marginBottom: hp(0.5),
-        textAlign: 'center',
-    },
-    subtitle: {
-        fontSize: wp(3),
-        fontFamily: FONT.regular,
-        marginBottom: hp(1),
-        textAlign: 'center'
     },
     closeButton: {
         width: wp(8),
-        alignSelf: 'flex-end',
         height: wp(8),
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     closeButtonText: {
         fontSize: wp(6),
@@ -425,13 +439,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(3),
         fontFamily: FONT.regular,
         fontSize: wp(3.5),
-    },
-    rowContainer: {
-        flexDirection: 'row',
-        gap: wp(3),
-    },
-    halfWidth: {
-        flex: 1,
     },
     dropdownContainer: {
         height: hp(6),
@@ -490,7 +497,7 @@ const styles = StyleSheet.create({
         paddingTop: hp(3),
         paddingBottom: hp(1),
         marginTop: hp(2),
-        borderTopWidth: .5,
+        borderTopWidth: 0.5,
     },
     cancelButton: {
         flex: 1,
@@ -526,4 +533,5 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AddIngredientModal; 
+export default EditIngredientModal;
+

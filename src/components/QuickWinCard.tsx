@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
+import { FONT, wp, hp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 
 // Accept items as a prop
 interface QuickWinItem {
@@ -10,6 +11,7 @@ interface QuickWinItem {
 }
 
 const QuickWinCard = ({ items }: { items: QuickWinItem[] }) => {
+    const { colors, theme } = useTheme();
     const [currentItems, setCurrentItems] = useState(items);
     const [isAnimating, setIsAnimating] = useState(false);
 
@@ -23,6 +25,9 @@ const QuickWinCard = ({ items }: { items: QuickWinItem[] }) => {
         }
     }, [items, currentItems]);
 
+    // Card background: white in light mode, dark in dark mode
+    const cardBackgroundColor = theme === 'light' ? colors.white : colors.primary;
+
     return (
         <ScrollView
             horizontal
@@ -35,11 +40,17 @@ const QuickWinCard = ({ items }: { items: QuickWinItem[] }) => {
                     animation={isAnimating ? "fadeOut" : "fadeIn"}
                     duration={300}
                     delay={idx * 100}
-                    style={styles.card}
+                    style={[
+                        styles.card,
+                        {
+                            backgroundColor: cardBackgroundColor,
+                            borderColor: colors.lightWhite,
+                        }
+                    ]}
                 >
                     <View style={styles.textContainer}>
-                        <Text style={styles.title}>{item.title}</Text>
-                        <Text style={styles.subtitle}>{item.subtitle}</Text>
+                        <Text style={[styles.title, { color: colors.brown }]}>{item.title}</Text>
+                        <Text style={[styles.subtitle, { color: colors.gray }]}>{item.subtitle}</Text>
                     </View>
                     <View style={styles.iconContainer}>
                         <Text style={styles.icon}>✨</Text>
@@ -58,13 +69,10 @@ const styles = StyleSheet.create({
     card: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: COLORS.white,
         borderRadius: wp(2),
         padding: wp(3),
         marginRight: wp(3),
         borderWidth: 1,
-        borderColor: COLORS.lightWhite
-
     },
     iconContainer: {
         width: wp(10),
@@ -81,13 +89,11 @@ const styles = StyleSheet.create({
     title: {
         fontFamily: FONT.semiBold,
         fontSize: wp(3.5),
-        color: COLORS.brown,
         marginBottom: 2,
     },
     subtitle: {
         fontFamily: FONT.regular,
         fontSize: wp(3),
-        color: COLORS.gray,
     },
 });
 

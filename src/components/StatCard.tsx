@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Text, StyleSheet } from 'react-native';
-import * as Animatable from 'react-native-animatable';
-import { COLORS, FONT, hp, wp } from '../constants/StyleGuide';
+import { Text, View, StyleSheet } from 'react-native';
+import { FONT, hp, wp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import ProgressBar from './ProgressBar';
 
 type StatCardProps = {
@@ -13,52 +13,45 @@ type StatCardProps = {
 };
 
 const StatCard: React.FC<StatCardProps> = ({ label, value, color, valueColor, progress }) => {
+    const { colors, theme } = useTheme();
     const [animatedProgress, setAnimatedProgress] = useState(0);
-    const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
-        setIsVisible(true);
         const timer = setTimeout(() => {
             setAnimatedProgress(progress);
         }, 500);
         return () => clearTimeout(timer);
     }, [progress]);
 
+    // Card background: white in light mode, dark in dark mode
+    const cardBackgroundColor = theme === 'light' ? colors.white : colors.primary;
+
     return (
-        <Animatable.View
-            animation={isVisible ? "fadeIn" : undefined}
-            duration={600}
-            style={styles.card}
+        <View
+            style={[styles.card, { backgroundColor: cardBackgroundColor, shadowColor: colors.black }]}
         >
-            <Text style={styles.cardLabel}>{label}</Text>
-            <Animatable.Text
-                animation={isVisible ? "zoomIn" : undefined}
-                duration={800}
-                delay={200}
-                style={[styles.cardValue, { color: valueColor }]}
-            >
+            <Text style={[styles.cardLabel, { color: colors.gray }]}>{label}</Text>
+            <Text style={[styles.cardValue, { color: valueColor }]}>
                 {value}
-            </Animatable.Text>
+            </Text>
             <ProgressBar progress={animatedProgress} color={color} />
-        </Animatable.View>
+        </View>
     );
 };
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(2),
         padding: wp(5),
         marginBottom: 16,
-        shadowColor: COLORS.black,
         shadowOpacity: 0.04,
         shadowOffset: { width: 0, height: 2 },
         shadowRadius: 8,
         elevation: 2,
+        marginHorizontal: wp(1),
     },
     cardLabel: {
         fontSize: wp(3),
-        color: COLORS.gray,
         fontFamily: FONT.medium,
         marginBottom: hp(.5),
         textAlign: 'center',

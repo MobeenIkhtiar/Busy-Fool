@@ -1,116 +1,279 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView } from 'react-native';
-import { COLORS, hp, wp, FONT } from '../../constants/StyleGuide';
+import React, { useState, useEffect, useCallback } from 'react';
+import { StyleSheet, Text, View, TouchableOpacity, Image, ScrollView, ActivityIndicator, Alert } from 'react-native';
+import { hp, wp, FONT } from '../../constants/StyleGuide';
+import { useTheme } from '../../context/ThemeContext';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import EditProfileModal, { ProfileFormData } from '../../components/EditProfileModal';
+import { authService, Profile, ApiError } from '../../services';
 
 const ProfileScreen = () => {
+    const { colors, theme } = useTheme();
+    const navigation = useNavigation();
+    const [isEditProfileVisible, setIsEditProfileVisible] = useState(false);
+    const [profile, setProfile] = useState<Profile | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+
+    // Fetch profile data
+    const fetchProfile = async () => {
+        setIsLoading(true);
+        try {
+            const profileData = await authService.getProfile();
+            setProfile(profileData);
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            console.error('Error fetching profile:', apiError);
+            // Don't show alert on initial load, just log the error
+            if (apiError.status === 401) {
+                // Token expired, user will be redirected to login
+                console.log('Token expired, user needs to login');
+            }
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        fetchProfile();
+    }, []);
+
+    useFocusEffect(
+        useCallback(() => {
+            fetchProfile();
+        }, [])
+    );
+
+    const handleEditProfile = async () => {
+        // Refresh profile data before opening modal to ensure we have latest data
+        try {
+            const latestProfile = await authService.getProfile();
+            setProfile(latestProfile);
+            console.log('Profile refreshed before opening edit modal:', latestProfile);
+        } catch (error) {
+            console.error('Error refreshing profile:', error);
+            // Still open modal even if refresh fails
+        }
+        setIsEditProfileVisible(true);
+    };
+
+    const handleCloseEditProfile = () => {
+        setIsEditProfileVisible(false);
+        // Refresh profile after closing modal
+        fetchProfile();
+    };
+
+    const handleUpdateProfile = async (data: ProfileFormData) => {
+        try {
+            console.log('=== Starting Profile Update Process ===');
+            
+            // Step 1: Upload profile picture if a new one was selected
+            if (data.profileImage) {
+                console.log('Step 1: Uploading profile picture to /auth/upload-profile-picture');
+                console.log('Image URI:', data.profileImage);
+                const uploadResult = await authService.uploadProfilePicture(data.profileImage);
+                console.log('Profile picture uploaded successfully:', uploadResult);
+            } else {
+                console.log('Step 1: Skipping profile picture upload (no new image selected)');
+            }
+            
+            // Step 2: Update profile with other data
+            console.log('Step 2: Updating profile data via PATCH /auth/profile');
+            const updateData = {
+                name: data.fullName,
+                phoneNumber: data.phoneNumber || undefined,
+                dateOfBirth: data.dateOfBirth || undefined,
+                address: data.address || undefined,
+                bio: data.bio || undefined,
+            };
+            console.log('Update data:', updateData);
+            
+            const updatedProfile = await authService.updateProfile(updateData);
+            console.log('Profile updated successfully:', updatedProfile);
+            
+            // Step 3: Get updated profile to ensure we have the latest data
+            console.log('Step 3: Fetching latest profile via GET /auth/profile');
+            const latestProfile = await authService.getProfile();
+            console.log('Latest profile fetched:', latestProfile);
+            
+            // Update profile state BEFORE closing modal so modal gets fresh data
+            setProfile(latestProfile);
+            console.log('Profile state updated with latest data');
+            
+            console.log('=== Profile Update Process Completed ===');
+            Alert.alert('Success', 'Profile updated successfully!');
+            
+            // Small delay to ensure state is updated before closing modal
+            setTimeout(() => {
+                setIsEditProfileVisible(false);
+            }, 100);
+        } catch (error: any) {
+            const apiError = error as ApiError;
+            console.error('=== Profile Update Error ===');
+            console.error('Error details:', apiError);
+            Alert.alert('Error', apiError.message || 'Failed to update profile. Please try again.');
+            // Re-throw error so EditProfileModal can reset loading state
+            throw error;
+        }
+    };
+    
     const ProfileIcon = () => (
-        <View style={styles.profileIcon}>
+        <View style={[styles.profileIcon, { backgroundColor: colors.lightBlue }]}>
             <Text style={styles.profileIconText}>👤</Text>
         </View>
     );
 
     const SettingsIcon = () => (
-        <View style={styles.settingsIcon}>
+        <View style={[styles.settingsIcon, { backgroundColor: colors.lightOrange }]}>
             <Text style={styles.settingsIconText}>⚙️</Text>
         </View>
     );
 
     const BillingIcon = () => (
-        <View style={styles.billingIcon}>
+        <View style={[styles.billingIcon, { backgroundColor: colors.lightPurple }]}>
             <Text style={styles.billingIconText}>💳</Text>
         </View>
     );
 
     const HelpIcon = () => (
-        <View style={styles.helpIcon}>
+        <View style={[styles.helpIcon, { backgroundColor: colors.lightGreen }]}>
             <Text style={styles.helpIconText}>❓</Text>
         </View>
     );
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={[styles.container, { backgroundColor: colors.primary }]}>
             <View style={styles.content}>
-                <Text style={styles.title}>Profile</Text>
+                <View style={styles.headerRow}>
+                    <TouchableOpacity 
+                        onPress={() => navigation.goBack()} 
+                        style={styles.backButton}
+                    >
+                        <Ionicons name="arrow-back" size={wp(6)} color={colors.brown} />
+                    </TouchableOpacity>
+                    <Text style={[styles.title, { color: colors.brown }]}>Profile</Text>
+                    <View style={styles.backButtonPlaceholder} />
+                </View>
 
                 {/* Profile Card */}
-                {/* <View style={styles.profileCard}>
+                {/* <View style={[styles.profileCard, { backgroundColor: colors.white, shadowColor: colors.black }]}>
                     <View style={styles.profileCardContent}>
                         <View style={styles.profileCardImageContainer}>
                             <Image
                                 source={{ uri: 'https://via.placeholder.com/80x80/4CAF50/FFFFFF?text=JD' }}
                                 style={styles.profileCardImage}
                             />
-                            <View style={styles.profileCardOnlineIndicator} />
+                            <View style={[styles.profileCardOnlineIndicator, { backgroundColor: colors.green, borderColor: colors.white }]} />
                         </View>
                         <View style={styles.profileCardInfo}>
-                            <Text style={styles.profileCardName}>John Doe</Text>
-                            <Text style={styles.profileCardEmail}>john.doe@example.com</Text>
-                            <Text style={styles.profileCardType}>Premium User</Text>
+                            <Text style={[styles.profileCardName, { color: colors.brown }]}>John Doe</Text>
+                            <Text style={[styles.profileCardEmail, { color: colors.lightgray }]}>john.doe@example.com</Text>
+                            <Text style={[styles.profileCardType, { color: colors.blue }]}>Premium User</Text>
                         </View>
                     </View>
                 </View> */}
 
                 {/* Profile Details Section (formerly modal content) */}
-                <View style={styles.profileDetailsSection}>
+                <View style={[styles.profileDetailsSection, { backgroundColor: cardBg, shadowColor: colors.black }]}>
                     {/* Header Section */}
-                    <View style={styles.headerSection}>
+                    <View style={[styles.headerSection, { backgroundColor: colors.brown }]}>
                         <View style={styles.headerLeft}>
                             <View style={styles.profileImageContainer}>
-                                <Image
-                                    source={{ uri: 'https://via.placeholder.com/60x60/4CAF50/FFFFFF?text=JD' }}
-                                    style={styles.profileImage}
-                                />
-                                <View style={styles.onlineIndicator} />
+                                {isLoading ? (
+                                    <View style={[styles.profileImage, { backgroundColor: colors.lightgray, justifyContent: 'center', alignItems: 'center' }]}>
+                                        <ActivityIndicator size="small" color={colors.white} />
+                                    </View>
+                                ) : (
+                                    <Image
+                                        source={{ 
+                                            uri: profile?.profilePicture || 'https://via.placeholder.com/60x60/4CAF50/FFFFFF?text=JD' 
+                                        }}
+                                        style={styles.profileImage}
+                                    />
+                                )}
+                                <View style={[styles.onlineIndicator, { backgroundColor: colors.green, borderColor: colors.white }]} />
                             </View>
                             <View style={styles.userInfo}>
-                                <Text style={styles.userName}>John Doe</Text>
-                                <Text style={styles.userEmail}>john.doe@example.com</Text>
-                                <Text style={styles.userType}>Premium User</Text>
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color={colors.white} />
+                                ) : (
+                                    <>
+                                        <Text style={[styles.userName, { color: colors.white }]}>
+                                            {profile?.name || 'Loading...'}
+                                        </Text>
+                                        <Text style={[styles.userEmail, { color: colors.white }]}>
+                                            {profile?.email || 'Loading...'}
+                                        </Text>
+                                        <Text style={[styles.userType, { color: colors.white }]}>
+                                            {profile?.role || 'User'}
+                                        </Text>
+                                    </>
+                                )}
                             </View>
                         </View>
                     </View>
 
                     {/* Menu Section */}
-                    <View style={styles.menuSection}>
-                        <TouchableOpacity style={styles.menuItem}>
+                    <View style={[styles.menuSection, { backgroundColor: cardBg }]}>
+                        <TouchableOpacity 
+                            style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}
+                            onPress={handleEditProfile}
+                        >
                             <ProfileIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={styles.menuItemTitle}>My Profile</Text>
-                                <Text style={styles.menuItemSubtitle}>View and edit your profile</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.black }]}>My Profile</Text>
+                                <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>View and edit your profile</Text>
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.menuItem}>
+                        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
                             <SettingsIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={styles.menuItemTitle}>Account Settings</Text>
-                                <Text style={styles.menuItemSubtitle}>Manage your account preferences</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.black }]}>Account Settings</Text>
+                                <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>Manage your account preferences</Text>
                             </View>
                         </TouchableOpacity>
 
-                        <TouchableOpacity style={styles.menuItem}>
+                        {/* <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
                             <BillingIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={styles.menuItemTitle}>Billing & Plans</Text>
-                                <Text style={styles.menuItemSubtitle}>Manage subscription and billing</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.brown }]}>Billing & Plans</Text>
+                                <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>Manage subscription and billing</Text>
                             </View>
-                        </TouchableOpacity>
+                        </TouchableOpacity> */}
 
-                        <TouchableOpacity style={styles.menuItem}>
+                        <TouchableOpacity style={[styles.menuItem, { borderBottomColor: colors.lightWhite }]}>
                             <HelpIcon />
                             <View style={styles.menuItemContent}>
-                                <Text style={styles.menuItemTitle}>Help & Support</Text>
-                                <Text style={styles.menuItemSubtitle}>Get help and contact support</Text>
+                                <Text style={[styles.menuItemTitle, { color: colors.black }]}>Help & Support</Text>
+                                <Text style={[styles.menuItemSubtitle, { color: colors.lightgray }]}>Get help and contact support</Text>
                             </View>
                         </TouchableOpacity>
                     </View>
 
                     {/* Footer Section */}
-                    <View style={styles.footerSection}>
-                        <Text style={styles.footerText}>Member since Jan 2024</Text>
+                    <View style={[styles.footerSection, { backgroundColor: cardBg, borderTopColor: colors.lightWhite }]}>
+                        <Text style={[styles.footerText, { color: colors.lightgray }]}>Member since Jan 2024</Text>
                     </View>
                 </View>
             </View>
+
+            {/* Edit Profile Modal */}
+            <EditProfileModal
+                visible={isEditProfileVisible}
+                onClose={handleCloseEditProfile}
+                onSubmit={handleUpdateProfile}
+                initialData={profile ? {
+                    fullName: profile.name || '',
+                    phoneNumber: profile.phoneNumber || '',
+                    dateOfBirth: profile.dateOfBirth || '',
+                    address: profile.address || '',
+                    bio: profile.bio || '',
+                    profileImage: profile.profilePicture,
+                } : undefined}
+            />
         </ScrollView>
     );
 };
@@ -120,24 +283,33 @@ export default ProfileScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.primary,
     },
     content: {
         paddingHorizontal: wp(4),
         paddingTop: hp(4),
     },
+    headerRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: hp(4),
+    },
+    backButton: {
+        padding: wp(1),
+    },
+    backButtonPlaceholder: {
+        width: wp(8),
+    },
     title: {
         fontSize: wp(6),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
-        marginBottom: hp(4),
+        flex: 1,
+        textAlign: 'center',
     },
     profileCard: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(4),
         marginBottom: hp(2),
-        shadowColor: COLORS.black,
         shadowOffset: {
             width: 0,
             height: 2,
@@ -166,9 +338,7 @@ const styles = StyleSheet.create({
         width: wp(4),
         height: wp(4),
         borderRadius: wp(2),
-        backgroundColor: COLORS.green,
         borderWidth: 2,
-        borderColor: COLORS.white,
     },
     profileCardInfo: {
         flex: 1,
@@ -176,26 +346,21 @@ const styles = StyleSheet.create({
     profileCardName: {
         fontSize: wp(5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
     },
     profileCardEmail: {
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.lightgray,
         marginBottom: hp(0.5),
     },
     profileCardType: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: COLORS.blue,
     },
     // New section for profile details (formerly modal content)
     profileDetailsSection: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         marginBottom: hp(2),
-        shadowColor: COLORS.black,
         shadowOffset: {
             width: 0,
             height: 4,
@@ -206,7 +371,6 @@ const styles = StyleSheet.create({
         overflow: 'hidden',
     },
     headerSection: {
-        backgroundColor: COLORS.brown,
         padding: wp(5),
         borderTopLeftRadius: wp(3),
         borderTopRightRadius: wp(3),
@@ -235,9 +399,7 @@ const styles = StyleSheet.create({
         width: wp(3),
         height: wp(3),
         borderRadius: wp(1.5),
-        backgroundColor: COLORS.green,
         borderWidth: 2,
-        borderColor: COLORS.white,
     },
     userInfo: {
         flex: 1,
@@ -245,38 +407,32 @@ const styles = StyleSheet.create({
     userName: {
         fontSize: wp(5.5),
         fontFamily: FONT.bold,
-        color: COLORS.white,
         marginBottom: hp(0.5),
     },
     userEmail: {
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.white,
         opacity: 0.9,
         marginBottom: hp(0.5),
     },
     userType: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: COLORS.white,
         opacity: 0.8,
     },
     menuSection: {
         padding: wp(4),
-        backgroundColor: COLORS.white,
     },
     menuItem: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingVertical: hp(2),
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.lightWhite,
     },
     profileIcon: {
         width: wp(10),
         height: wp(10),
         borderRadius: wp(5),
-        backgroundColor: COLORS.lightBlue,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: wp(4),
@@ -288,7 +444,6 @@ const styles = StyleSheet.create({
         width: wp(10),
         height: wp(10),
         borderRadius: wp(5),
-        backgroundColor: COLORS.lightOrange,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: wp(4),
@@ -300,7 +455,6 @@ const styles = StyleSheet.create({
         width: wp(10),
         height: wp(10),
         borderRadius: wp(5),
-        backgroundColor: COLORS.lightPurple,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: wp(4),
@@ -312,7 +466,6 @@ const styles = StyleSheet.create({
         width: wp(10),
         height: wp(10),
         borderRadius: wp(5),
-        backgroundColor: COLORS.lightGreen,
         justifyContent: 'center',
         alignItems: 'center',
         marginRight: wp(4),
@@ -326,24 +479,19 @@ const styles = StyleSheet.create({
     menuItemTitle: {
         fontSize: wp(4.5),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         marginBottom: hp(0.5),
     },
     menuItemSubtitle: {
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.lightgray,
     },
     footerSection: {
         padding: wp(4),
         borderTopWidth: 1,
-        borderTopColor: COLORS.lightWhite,
-        backgroundColor: COLORS.white,
     },
     footerText: {
         fontSize: wp(3.5),
         fontFamily: FONT.regular,
-        color: COLORS.lightgray,
         textAlign: 'center',
     },
 });

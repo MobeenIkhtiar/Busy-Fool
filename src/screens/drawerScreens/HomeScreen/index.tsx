@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, ScrollView } from 'react-native';
+import { StyleSheet, Text, View, ScrollView, ActivityIndicator } from 'react-native';
 import * as Animatable from 'react-native-animatable';
-import { COLORS, FONT, wp, hp } from '../../../constants/StyleGuide';
+import { FONT, wp, hp } from '../../../constants/StyleGuide';
+import { useTheme } from '../../../context/ThemeContext';
 import TopBar from '../../../components/TopBar';
 import StatCard from '../../../components/StatCard';
 import TabSwitcher from '../../../components/TabSwitcher';
@@ -29,8 +30,10 @@ const QUICK_WIN_ITEMS = [
 
 const HomeScreen = () => {
     const navigation = useNavigation();
+    const { colors } = useTheme();
     const [activeTab, setActiveTab] = useState(0);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [isStatsLoading, setIsStatsLoading] = useState(true);
 
     useEffect(() => {
         // Trigger animations after component mounts
@@ -38,8 +41,29 @@ const HomeScreen = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    useEffect(() => {
+        // Simulate API call - replace this with actual API call in future
+        const fetchStats = async () => {
+            try {
+                // TODO: Replace with actual API call
+                // const stats = await statsService.getStats();
+                
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 1500));
+                
+                // Set stats data here when API is ready
+                setIsStatsLoading(false);
+            } catch (error) {
+                console.error('Error fetching stats:', error);
+                setIsStatsLoading(false);
+            }
+        };
+
+        fetchStats();
+    }, []);
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.primary }]}>
             <TopBar navigation={navigation as any} />
             <ScrollView
                 contentContainerStyle={styles.scrollContent}
@@ -51,38 +75,31 @@ const HomeScreen = () => {
                     delay={200}
                     style={styles.headerSection}
                 >
-                    <Text style={styles.welcomeText}>Welcome back <Text style={styles.emoji}>👋</Text></Text>
-                    <Text style={styles.subtitle}>Here's a quick glance at your coffee business today.</Text>
+                    <Text style={[styles.welcomeText, { color: colors.brown }]}>Welcome back <Text style={styles.emoji}>👋</Text></Text>
+                    <Text style={[styles.subtitle, { color: colors.gray }]}>Here's a quick glance at your coffee business today.</Text>
                 </Animatable.View>
 
-                <Animatable.View
-                    animation={isLoaded ? "fadeInUp" : undefined}
-                    duration={1000}
-                    delay={400}
-                    style={styles.statsSection}
-                >
+                {isLoaded && (
                     <Animatable.View
-                        animation={isLoaded ? "slideInLeft" : undefined}
-                        duration={600}
-                        delay={600}
+                        animation="fadeInUp"
+                        duration={800}
+                        delay={400}
+                        style={styles.statsSection}
                     >
-                        <StatCard label="Revenue" value="£1243" color={COLORS.brown} valueColor={COLORS.brown} progress={0.8} />
+                        {isStatsLoading ? (
+                            <View style={[styles.loaderContainer, { backgroundColor: colors.primary }]}>
+                                <ActivityIndicator size="large" color={colors.brown} />
+                                <Text style={[styles.loaderText, { color: colors.gray }]}>Loading stats...</Text>
+                            </View>
+                        ) : (
+                            <>
+                                <StatCard label="Revenue" value="£1243" color={colors.brown} valueColor={colors.brown} progress={0.8} />
+                                <StatCard label="Cost" value="£872" color={colors.orange} valueColor={colors.orange} progress={0.6} />
+                                <StatCard label="Profit" value="£371" color={colors.green} valueColor={colors.green} progress={0.3} />
+                            </>
+                        )}
                     </Animatable.View>
-                    <Animatable.View
-                        animation={isLoaded ? "slideInLeft" : undefined}
-                        duration={600}
-                        delay={800}
-                    >
-                        <StatCard label="Cost" value="£872" color={'#F97315'} valueColor={'#F97315'} progress={0.6} />
-                    </Animatable.View>
-                    <Animatable.View
-                        animation={isLoaded ? "slideInLeft" : undefined}
-                        duration={600}
-                        delay={1000}
-                    >
-                        <StatCard label="Profit" value="£371" color={COLORS.green} valueColor={COLORS.green} progress={0.3} />
-                    </Animatable.View>
-                </Animatable.View>
+                )}
 
                 <Animatable.View
                     animation={isLoaded ? "zoomIn" : undefined}
@@ -108,7 +125,7 @@ const HomeScreen = () => {
                     duration={800}
                     delay={1600}
                 >
-                    <Text style={styles.liveProductTitle}>Live Product Suggestions</Text>
+                    <Text style={[styles.liveProductTitle, { color: colors.brown }]}>Live Product Suggestions</Text>
                 </Animatable.View>
 
                 <Animatable.View
@@ -136,12 +153,11 @@ export default HomeScreen;
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: COLORS.primary,
         paddingTop: hp(2),
         paddingHorizontal: wp(4),
     },
     scrollContent: {
-        paddingBottom: hp(10),
+        paddingBottom: hp(4),
     },
     headerSection: {
         marginBottom: hp(2),
@@ -149,14 +165,12 @@ const styles = StyleSheet.create({
     welcomeText: {
         fontSize: wp(8),
         fontFamily: FONT.extraBold,
-        color: COLORS.brown,
     },
     emoji: {
         fontSize: wp(7),
     },
     subtitle: {
         fontSize: wp(4),
-        color: COLORS.gray,
         fontFamily: FONT.regular,
         marginTop: 4,
     },
@@ -167,10 +181,23 @@ const styles = StyleSheet.create({
         marginVertical: hp(2),
     },
     liveProductTitle: {
-        color: COLORS.brown,
         fontFamily: FONT.semiBold,
         fontSize: wp(4.5),
         marginBottom: hp(1),
         marginTop: hp(1)
+    },
+    loaderContainer: {
+        borderRadius: wp(2),
+        padding: wp(8),
+        marginBottom: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: hp(15),
+        marginHorizontal: wp(1),
+    },
+    loaderText: {
+        fontSize: wp(3.5),
+        fontFamily: FONT.medium,
+        marginTop: hp(2),
     },
 });
