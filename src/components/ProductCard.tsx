@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import { COLORS, hp, wp, FONT } from '../constants/StyleGuide';
+import { hp, wp, FONT } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import * as Animatable from 'react-native-animatable';
 
 interface ProductCardProps {
@@ -23,13 +24,20 @@ interface ProductCardProps {
             cost: number;
         }>;
     };
+    onWhatIfPress?: () => void;
+    onSwapPress?: () => void;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
+const ProductCard: React.FC<ProductCardProps> = ({ product, onWhatIfPress, onSwapPress }) => {
+    const { colors, theme } = useTheme();
     const [showIngredients, setShowIngredients] = useState(false);
     const isProfitable = product.isProfitable;
     const profitColor = isProfitable ? '#EEFDF4' : '#FDF2F6';
     const impactPrefix = isProfitable ? '+' : '';
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+    const cloneButtonBg = theme === 'light' ? colors.white : colors.primary;
 
     // Default ingredients if not provided
     const defaultIngredients = [
@@ -45,18 +53,26 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
     };
 
     return (
-        <View style={[styles.container, { borderTopColor: isProfitable ? '#49DE80' : '#F87171' }]}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                shadowColor: colors.black,
+                borderTopColor: isProfitable ? '#49DE80' : '#F87171',
+                borderColor: colors.lightWhite,
+            }
+        ]}>
             {/* Product Header */}
             <View style={styles.header}>
                 <View style={styles.productInfo}>
-                    <Text style={styles.productName}>{product.name}</Text>
+                    <Text style={[styles.productName, { color: colors.black }]}>{product.name}</Text>
                     <View style={styles.tags}>
                         <View style={styles.categoryTag}>
-                            <Text style={styles.categoryText}>{product.category}</Text>
+                            <Text style={[styles.categoryText, { color: '#000000' }]}>{product.category}</Text>
                         </View>
                         <View style={styles.ratingContainer}>
                             <Icon name="star" size={14} color="#FFD700" />
-                            <Text style={styles.rating}>{product.rating}</Text>
+                            <Text style={[styles.rating, { color: '#000000' }]}>{product.rating}</Text>
                         </View>
                     </View>
                     <View style={[styles.profitableTag, { backgroundColor: isProfitable ? '#DCFCE7' : '#FEE2E1' }]}>
@@ -71,8 +87,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <View style={styles.priceCostContainer}>
                 <View style={styles.priceCard}>
                     <Icon name="attach-money" size={20} color={'#1F3A8A'} style={styles.cardIcon} />
-                    <Text style={styles.cardLabel}>Sell Price</Text>
-                    <Text style={styles.cardValue}>£{product.sellPrice.toFixed(2)}</Text>
+                    <Text style={[styles.cardLabel, { color: '#1F3A8A' }]}>Sell Price</Text>
+                    <Text style={[styles.cardValue, { color: '#1F3A8A' }]}>£{product.sellPrice.toFixed(2)}</Text>
                 </View>
                 <View style={styles.costCard}>
                     <Icon name="inventory" size={20} color={'#7C2D12'} style={styles.cardIcon} />
@@ -90,21 +106,21 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         ) : (
                             <Icon name="error-outline" size={wp(4)} color={'#DC2626'} style={{ marginRight: 4 }} />
                         )}
-                        <Text style={[styles.profitMarginTitle]}>Profit Margin</Text>
+                        <Text style={[styles.profitMarginTitle, { color: '#000000' }]}>Profit Margin</Text>
                     </View>
                     <View style={styles.salesTodaySection}>
-                        <Text style={styles.salesTodayLabel}>Sales Today</Text>
+                        <Text style={[styles.salesTodayLabel, { color: '#6B7280' }]}>Sales Today</Text>
 
                         <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                            <Icon name="bar-chart" size={wp(4)} color={COLORS.gray} style={{ marginRight: 2 }} />
-                            <Text style={styles.salesTodayValue}>{product.salesToday}</Text>
+                            <Icon name="bar-chart" size={wp(4)} color={'#6B7280'} style={{ marginRight: 2 }} />
+                            <Text style={[styles.salesTodayValue, { color: '#000000' }]}>{product.salesToday}</Text>
                         </View>
                     </View>
                 </View>
                 <Text style={[styles.profitMarginPercent, { color: isProfitable ? '#17A34A' : '#DC2626' }]}>
                     {isProfitable ? '+' : '-'}{Math.abs(product.profitMargin).toFixed(1)}%
                 </Text>
-                <Text style={[styles.profitMarginPerSale]}>
+                <Text style={[styles.profitMarginPerSale, { color: '#000000' }]}>
                     £{isProfitable ? '+' : '-'}{Math.abs(product.profitPerSale).toFixed(2)} per sale
                 </Text>
                 <View style={styles.profitMarginProgressBar}>
@@ -116,13 +132,13 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
             <View style={[styles.impactCard, { borderColor: isProfitable ? '#BBF7D0' : '#FECACA', backgroundColor: profitColor }]}>
                 <View style={styles.impactContent}>
                     <Icon name="target" size={16} color={isProfitable ? '#17A34A' : '#DC2625'} />
-                    <Text style={styles.impactLabel}>Today's Impact</Text>
+                    <Text style={[styles.impactLabel, { color: '#000000' }]}>Today's Impact</Text>
                 </View>
                 <View style={styles.impactValues}>
                     <Text style={[styles.impactAmount, { color: isProfitable ? '#17A34A' : '#DC2625' }]}>
                         £{impactPrefix}{product.todayImpact.toFixed(2)}
                     </Text>
-                    <Text style={styles.impactCalculation}>
+                    <Text style={[styles.impactCalculation, { color: '#000000' }]}>
                         {product.salesToday} × £{Math.abs(product.profitPerSale).toFixed(2)}
                     </Text>
                 </View>
@@ -137,8 +153,8 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                     duration={300}
                     useNativeDriver
                 >
-                    <Icon name="list-alt" size={wp(4)} color={COLORS.black} />
-                    <Text style={styles.ingredientsText}>Ingredients ({product.ingredientsCount})</Text>
+                    <Icon name="list-alt" size={wp(4)} color={colors.black} />
+                    <Text style={[styles.ingredientsText, { color: colors.black }]}>Ingredients ({product.ingredientsCount})</Text>
                     <Animatable.View
                         animation={showIngredients ? 'rotate' : undefined}
                         duration={300}
@@ -147,7 +163,7 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                         <Icon
                             name={showIngredients ? "keyboard-arrow-up" : "keyboard-arrow-down"}
                             size={wp(6)}
-                            color={COLORS.gray}
+                            color={colors.gray}
                         />
                     </Animatable.View>
                 </Animatable.View>
@@ -168,10 +184,10 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                             {ingredients.map((ingredient, index) => (
                                 <View key={index} style={styles.ingredientItem}>
                                     <View style={styles.ingredientInfo}>
-                                        <Text style={styles.ingredientName}>{ingredient.name}</Text>
-                                        <Text style={styles.ingredientQuantity}>{ingredient.quantity}</Text>
+                                        <Text style={[styles.ingredientName, { color: colors.black }]}>{ingredient.name}</Text>
+                                        <Text style={[styles.ingredientQuantity, { color: colors.gray }]}>{ingredient.quantity}</Text>
                                     </View>
-                                    <Text style={styles.ingredientCost}>£{ingredient.cost.toFixed(2)}</Text>
+                                    <Text style={[styles.ingredientCost, { color: colors.brown }]}>£{ingredient.cost.toFixed(2)}</Text>
                                 </View>
                             ))}
                             {/* <View style={styles.ingredientTotal}>
@@ -183,13 +199,25 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
                 </Animatable.View>
 
                 <View style={styles.actionButtons}>
-                    <TouchableOpacity style={styles.whatIfButton}>
-                        <Icon name="calculate" size={16} color={COLORS.white} />
+                    <TouchableOpacity 
+                        style={styles.whatIfButton}
+                        onPress={onWhatIfPress}
+                    >
+                        <Icon name="calculate" size={16} color={colors.white} />
                         <Text style={styles.whatIfText}>What-If</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.cloneButton}>
-                        <Icon name="content-copy" size={16} color={COLORS.gray} />
-                        <Text style={styles.cloneText}>Clone</Text>
+                    <TouchableOpacity 
+                        style={[
+                            styles.cloneButton,
+                            {
+                                backgroundColor: cloneButtonBg,
+                                borderColor: colors.lightWhite,
+                            }
+                        ]}
+                        onPress={onSwapPress}
+                    >
+                        <Icon name="swap-horiz" size={16} color={colors.gray} />
+                        <Text style={[styles.cloneText, { color: colors.gray }]}>Swap</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -199,16 +227,15 @@ const ProductCard: React.FC<ProductCardProps> = ({ product }) => {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(4),
         padding: wp(4),
         marginBottom: hp(3),
-        shadowColor: '#000',
         shadowOffset: { width: 0, height: hp(0.25) },
         shadowOpacity: 0.1,
         shadowRadius: wp(1),
         elevation: 3,
         borderTopWidth: 8,
+        borderWidth: 1,
     },
     header: {
         marginBottom: hp(2),
@@ -219,7 +246,6 @@ const styles = StyleSheet.create({
     productName: {
         fontSize: wp(5),
         fontFamily: FONT.bold,
-        color: COLORS.black,
     },
     tags: {
         flexDirection: 'row',
@@ -235,7 +261,6 @@ const styles = StyleSheet.create({
     categoryText: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     ratingContainer: {
         flexDirection: 'row',
@@ -245,7 +270,6 @@ const styles = StyleSheet.create({
     rating: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     profitableTag: {
         alignSelf: 'flex-start',
@@ -264,7 +288,7 @@ const styles = StyleSheet.create({
     },
     priceCard: {
         flex: 1,
-        backgroundColor: COLORS.lightBlue,
+        backgroundColor: '#E0E7FF',
         borderRadius: wp(3),
         padding: wp(3),
         alignItems: 'center',
@@ -297,7 +321,6 @@ const styles = StyleSheet.create({
         marginBottom: hp(2),
         flexDirection: 'row',
         borderWidth: 1,
-        borderColor: COLORS.lightWhite,
     },
     profitSection: {
         flex: 1,
@@ -313,7 +336,6 @@ const styles = StyleSheet.create({
     sectionLabel: {
         fontSize: wp(3.2),
         fontFamily: FONT.medium,
-        color: COLORS.black,
         marginBottom: hp(0.5),
     },
     profitMargin: {
@@ -324,24 +346,21 @@ const styles = StyleSheet.create({
     profitPerSale: {
         fontSize: wp(2.5),
         fontFamily: FONT.regular,
-        color: COLORS.black,
     },
     salesNumber: {
         fontSize: wp(4.5),
         fontFamily: FONT.bold,
-        color: COLORS.black,
         marginBottom: hp(0.5),
     },
     progressBar: {
         width: wp(15),
         height: hp(0.5),
-        backgroundColor: COLORS.lightWhite,
         borderRadius: wp(0.5),
         overflow: 'hidden',
     },
     progressFill: {
         height: '100%',
-        backgroundColor: COLORS.green,
+        backgroundColor: '#22C55E',
         borderRadius: wp(0.5),
     },
     impactCard: {
@@ -361,7 +380,6 @@ const styles = StyleSheet.create({
     impactLabel: {
         fontSize: wp(3.5),
         fontFamily: FONT.semiBold,
-        color: COLORS.black,
     },
     impactValues: {
         alignItems: 'flex-end',
@@ -369,12 +387,10 @@ const styles = StyleSheet.create({
     impactAmount: {
         fontSize: wp(4.5),
         fontFamily: FONT.bold,
-        color: COLORS.white,
     },
     impactCalculation: {
         fontSize: wp(2.5),
         fontFamily: FONT.regular,
-        color: COLORS.black,
     },
     bottomSection: {
         gap: hp(2),
@@ -390,7 +406,6 @@ const styles = StyleSheet.create({
         flex: 1,
         fontSize: wp(3.8),
         fontFamily: FONT.medium,
-        color: COLORS.black,
         marginLeft: wp(2),
     },
     ingredientsDropdown: {
@@ -415,18 +430,15 @@ const styles = StyleSheet.create({
     ingredientName: {
         fontSize: wp(3.5),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     ingredientQuantity: {
         fontSize: wp(3.2),
         fontFamily: FONT.regular,
-        color: COLORS.gray,
         marginTop: hp(0.2),
     },
     ingredientCost: {
         fontSize: wp(3.3),
         fontFamily: FONT.bold,
-        color: COLORS.brown,
         backgroundColor: '#F7F5F4',
         padding: wp(2),
         borderRadius: wp(1.5),
@@ -438,17 +450,14 @@ const styles = StyleSheet.create({
         paddingTop: hp(1),
         marginTop: hp(0.5),
         borderTopWidth: 1,
-        borderTopColor: COLORS.lightWhite,
     },
     ingredientTotalLabel: {
         fontSize: wp(3.8),
         fontFamily: FONT.medium,
-        color: COLORS.black,
     },
     ingredientTotalValue: {
         fontSize: wp(3.8),
         fontFamily: FONT.bold,
-        color: COLORS.black,
     },
     actionButtons: {
         flexDirection: 'row',
@@ -456,9 +465,9 @@ const styles = StyleSheet.create({
     },
     whatIfButton: {
         flex: 1,
-        backgroundColor: COLORS.brown,
+        backgroundColor: '#3cb371',
         borderRadius: wp(3),
-        padding: wp(3),
+        height: hp(5),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
@@ -467,24 +476,21 @@ const styles = StyleSheet.create({
     whatIfText: {
         fontSize: wp(3.8),
         fontFamily: FONT.medium,
-        color: COLORS.white,
+        color: '#fff',
     },
     cloneButton: {
         flex: 1,
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
-        padding: wp(3),
+        height: hp(5),
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: wp(2),
         borderWidth: 1,
-        borderColor: COLORS.lightWhite,
     },
     cloneText: {
         fontSize: wp(3.8),
         fontFamily: FONT.medium,
-        color: COLORS.gray,
     },
     profitMarginBox: {
         backgroundColor: '#FAFBFB',
@@ -507,7 +513,6 @@ const styles = StyleSheet.create({
     profitMarginTitle: {
         fontSize: wp(3.5),
         fontFamily: FONT.semiBold,
-        color: COLORS.black,
         marginLeft: wp(1)
     },
     salesTodaySection: {
@@ -516,13 +521,11 @@ const styles = StyleSheet.create({
     salesTodayLabel: {
         fontSize: wp(3),
         fontFamily: FONT.medium,
-        color: COLORS.gray,
         marginRight: 2,
     },
     salesTodayValue: {
         fontSize: wp(3.5),
         fontFamily: FONT.bold,
-        color: COLORS.black,
         marginLeft: 2,
     },
     profitMarginPercent: {
@@ -534,7 +537,6 @@ const styles = StyleSheet.create({
     profitMarginPerSale: {
         fontSize: wp(2.5),
         fontFamily: FONT.regular,
-        color: COLORS.black,
         marginBottom: hp(1),
     },
     profitMarginProgressBar: {

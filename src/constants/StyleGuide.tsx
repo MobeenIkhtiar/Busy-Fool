@@ -15,7 +15,7 @@ export const COLORS = {
     primary: '#FAF8F5',
     white: '#fff',
     lightWhite: '#EBEBEB80',
-    brown: '#6B4226',
+    brown: '#3cb371',
     blue: '#284CFF',
     lightBlue: '#284CFF1A',
     lightgray: '#A09CAB',
@@ -30,6 +30,8 @@ export const COLORS = {
     lightOrange: '#F973161A',
     lightPurple: '#8B5CF61A',
     lightRed: '#F044381A',
+    gradientStart: '#3cb371',
+    gradientEnd: '#2d9d5f',
 };
 
 export const FONT = {

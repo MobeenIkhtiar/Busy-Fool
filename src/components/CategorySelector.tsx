@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Image, Modal, FlatList } from 'react-native';
-import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
+import { FONT, wp, hp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 import { icons } from '../constants/icons';
 
 interface CategorySelectorProps {
@@ -9,7 +10,12 @@ interface CategorySelectorProps {
 }
 
 const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, onCategoryChange }) => {
+    const { colors, theme } = useTheme();
     const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+    
+    // Card background: white in light mode, dark in dark mode
+    const selectorBg = theme === 'light' ? colors.white : colors.primary;
+    const dropdownBg = theme === 'light' ? colors.white : colors.primary;
 
     const categories = [
         'All Products',
@@ -29,13 +35,19 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, o
     return (
         <View style={styles.container}>
             <TouchableOpacity
-                style={styles.selector}
+                style={[
+                    styles.selector,
+                    {
+                        backgroundColor: selectorBg,
+                        shadowColor: colors.black,
+                    }
+                ]}
                 onPress={() => setIsDropdownVisible(true)}
             >
-                <Text style={styles.selectedText}>{selectedCategory}</Text>
+                <Text style={[styles.selectedText, { color: colors.brown }]}>{selectedCategory}</Text>
                 <Image
                     source={icons.filter}
-                    style={styles.chevron}
+                    style={[styles.chevron, { tintColor: colors.brown }]}
                     resizeMode="contain"
                 />
             </TouchableOpacity>
@@ -51,7 +63,13 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, o
                     activeOpacity={1}
                     onPress={() => setIsDropdownVisible(false)}
                 >
-                    <View style={styles.dropdownContainer}>
+                    <View style={[
+                        styles.dropdownContainer,
+                        {
+                            backgroundColor: dropdownBg,
+                            shadowColor: colors.black,
+                        }
+                    ]}>
                         <FlatList
                             data={categories}
                             keyExtractor={(item) => item}
@@ -59,13 +77,15 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, o
                                 <TouchableOpacity
                                     style={[
                                         styles.dropdownItem,
-                                        selectedCategory === item && styles.selectedItem
+                                        { borderBottomColor: colors.lightWhite },
+                                        selectedCategory === item && [styles.selectedItem, { backgroundColor: colors.lightBlue }]
                                     ]}
                                     onPress={() => handleCategorySelect(item)}
                                 >
                                     <Text style={[
                                         styles.dropdownItemText,
-                                        selectedCategory === item && styles.selectedItemText
+                                        { color: colors.brown },
+                                        selectedCategory === item && [styles.selectedItemText, { color: colors.blue }]
                                     ]}>
                                         {item}
                                     </Text>
@@ -83,16 +103,15 @@ const CategorySelector: React.FC<CategorySelectorProps> = ({ selectedCategory, o
 const styles = StyleSheet.create({
     container: {
         marginVertical: hp(2),
+        marginHorizontal: wp(1),
     },
     selector: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(2),
         paddingHorizontal: wp(4),
         paddingVertical: hp(2),
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 1,
@@ -104,12 +123,10 @@ const styles = StyleSheet.create({
     selectedText: {
         fontSize: wp(3.8),
         fontFamily: FONT.medium,
-        color: COLORS.brown,
     },
     chevron: {
         width: wp(4),
         height: wp(4),
-        tintColor: COLORS.brown,
     },
     modalOverlay: {
         flex: 1,
@@ -118,11 +135,9 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     dropdownContainer: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(2),
         maxHeight: hp(40),
         width: wp(80),
-        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 4,
@@ -135,18 +150,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: wp(4),
         paddingVertical: hp(2),
         borderBottomWidth: 1,
-        borderBottomColor: COLORS.lightWhite,
     },
     selectedItem: {
-        backgroundColor: COLORS.lightBlue,
+        // backgroundColor is set dynamically
     },
     dropdownItemText: {
         fontSize: wp(3.8),
         fontFamily: FONT.medium,
-        color: COLORS.brown,
     },
     selectedItemText: {
-        color: COLORS.blue,
         fontFamily: FONT.semiBold,
     },
 });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform } from 'react-native';
 import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
 
 interface TimePeriodSelectorProps {
@@ -37,11 +37,12 @@ const styles = StyleSheet.create({
     container: {
         flexDirection: 'row',
         marginVertical: hp(2),
+        marginHorizontal: wp(1),
         gap: wp(2),
     },
     periodButton: {
         paddingHorizontal: wp(4),
-        paddingVertical: hp(1),
+        paddingVertical: Platform.OS === 'ios' ? hp(1) : hp(0.5),
         borderRadius: wp(2),
     },
     selectedPeriod: {

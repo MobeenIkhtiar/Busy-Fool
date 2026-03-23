@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, Image } from 'react-native';
-import { COLORS, FONT, hp, wp } from '../constants/StyleGuide';
+import { FONT, hp, wp } from '../constants/StyleGuide';
+import { useTheme } from '../context/ThemeContext';
 
 interface AnalyticsMetricCardProps {
     icon: any;
@@ -19,8 +20,22 @@ const AnalyticsMetricCard: React.FC<AnalyticsMetricCardProps> = ({
     iconBackground,
     valueColor
 }) => {
+    const { colors, theme } = useTheme();
+    
+    // Card background: white in light mode, dark in dark mode
+    const cardBg = theme === 'light' ? colors.white : colors.primary;
+    
+    // Text colors: gray in light mode, gray in dark mode (adjusted for visibility)
+    const labelColor = theme === 'light' ? '#6B7280' : colors.gray;
+
     return (
-        <View style={styles.card}>
+        <View style={[
+            styles.card,
+            {
+                backgroundColor: cardBg,
+                shadowColor: colors.black,
+            }
+        ]}>
             <View style={[styles.iconContainer, { backgroundColor: iconBackground }]}>
                 <Image
                     source={icon}
@@ -29,7 +44,7 @@ const AnalyticsMetricCard: React.FC<AnalyticsMetricCardProps> = ({
                 />
             </View>
             <View style={styles.content}>
-                <Text style={styles.label}>{label}</Text>
+                <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
                 <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
             </View>
         </View>
@@ -38,11 +53,9 @@ const AnalyticsMetricCard: React.FC<AnalyticsMetricCardProps> = ({
 
 const styles = StyleSheet.create({
     card: {
-        backgroundColor: COLORS.white,
         borderRadius: wp(3),
         padding: wp(4),
         alignItems: 'center',
-        shadowColor: '#000',
         shadowOffset: {
             width: 0,
             height: 2,
@@ -70,7 +83,6 @@ const styles = StyleSheet.create({
     label: {
         fontSize: wp(2.5),
         fontFamily: FONT.regular,
-        color: '#6B7280',
         marginBottom: hp(0.5),
         textAlign: 'center',
     },

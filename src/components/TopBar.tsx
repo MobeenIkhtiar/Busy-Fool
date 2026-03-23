@@ -1,48 +1,66 @@
 import React from 'react';
 import { View, TouchableOpacity, Text, StyleSheet, Image } from 'react-native';
-import { COLORS, FONT, wp, hp } from '../constants/StyleGuide';
+import { FONT, wp, hp } from '../constants/StyleGuide';
 import { icons } from '../constants/icons';
+import { useTheme } from '../context/ThemeContext';
+import Ionicons from 'react-native-vector-icons/Ionicons';
 
 type TopBarProps = {
     navigation?: any;
 };
 
-const MenuIcon = () => (
+const MenuIcon = ({ colors }: { colors: any }) => (
     <View style={styles.menuIconBox}>
-        <Image source={icons.drawer} style={styles.menuIcon} />
+        <Image source={icons.drawer} style={[styles.menuIcon, { tintColor: colors.brown }]} />
     </View>
 );
-const BellIcon = () => (
+const BellIcon = ({ colors }: { colors: any }) => (
     <View style={styles.bellIconContainer}>
-        <Image source={icons.notification} style={styles.menuIcon} />
+        <Image source={icons.notification} style={[styles.menuIcon, { tintColor: colors.brown }]} />
     </View>
 );
-const ProfileImage = ({ navigation }: TopBarProps) => (
-    <TouchableOpacity style={styles.profileImage} onPress={() => navigation.navigate('Profile')}>
+const ProfileImage = ({ navigation, colors }: TopBarProps & { colors: any }) => (
+    <TouchableOpacity style={[styles.profileImage, { backgroundColor: colors.brown }]} onPress={() => navigation.navigate('Profile')}>
         <Text style={styles.profileText}>P</Text>
     </TouchableOpacity>
 );
 
-const TopBar = ({ navigation }: TopBarProps) => (
-    <View style={styles.topBar}>
-        <TouchableOpacity
-            onPress={() => {
-                if (navigation && typeof navigation.openDrawer === 'function') {
-                    navigation.openDrawer();
-                }
-            }}
-        >
-            <MenuIcon />
-        </TouchableOpacity>
-        <View style={styles.rightSection}>
-            <View style={styles.bellWrapper}>
-                <BellIcon />
-                <View style={styles.badge}><Text style={styles.badgeText}>3</Text></View>
+const TopBar = ({ navigation }: TopBarProps) => {
+    const { theme, toggleTheme, colors } = useTheme();
+    
+    return (
+        <View style={styles.topBar}>
+            <TouchableOpacity
+                onPress={() => {
+                    if (navigation && typeof navigation.openDrawer === 'function') {
+                        navigation.openDrawer();
+                    }
+                }}
+            >
+                <MenuIcon colors={colors} />
+            </TouchableOpacity>
+            <View style={styles.rightSection}>
+                {/* <View style={styles.bellWrapper}>
+                    <BellIcon colors={colors} />
+                    <View style={[styles.badge, { backgroundColor: colors.red }]}>
+                        <Text style={styles.badgeText}>3</Text>
+                    </View>
+                </View> */}
+                <TouchableOpacity 
+                    onPress={toggleTheme}
+                    style={styles.themeToggle}
+                >
+                    <Ionicons 
+                        name={theme === 'light' ? 'moon-outline' : 'sunny-outline'} 
+                        size={wp(6)} 
+                        color={colors.brown} 
+                    />
+                </TouchableOpacity>
+                <ProfileImage navigation={navigation} colors={colors} />
             </View>
-            <ProfileImage navigation={navigation} />
         </View>
-    </View>
-);
+    );
+};
 
 const styles = StyleSheet.create({
     topBar: {
@@ -70,14 +88,12 @@ const styles = StyleSheet.create({
         height: wp(5),
         borderRadius: wp(2.5),
         borderWidth: 2,
-        borderColor: COLORS.brown,
         borderBottomWidth: 0,
         backgroundColor: 'transparent',
     },
     bellDot: {
         width: wp(2),
         height: wp(2),
-        backgroundColor: COLORS.brown,
         borderRadius: wp(1),
         marginTop: 2,
     },
@@ -85,12 +101,11 @@ const styles = StyleSheet.create({
         width: wp(9),
         height: wp(9),
         borderRadius: wp(4.5),
-        backgroundColor: COLORS.lightgray,
         justifyContent: 'center',
         alignItems: 'center',
     },
     profileText: {
-        color: COLORS.brown,
+        color: '#fff',
         fontFamily: FONT.bold,
         fontSize: wp(5),
     },
@@ -101,11 +116,14 @@ const styles = StyleSheet.create({
     bellWrapper: {
         marginRight: wp(4),
     },
+    themeToggle: {
+        marginRight: wp(4),
+        padding: wp(1),
+    },
     badge: {
         position: 'absolute',
         top: -4,
         right: -8,
-        backgroundColor: COLORS.red,
         borderRadius: 8,
         minWidth: 16,
         height: 16,
@@ -115,7 +133,7 @@ const styles = StyleSheet.create({
         zIndex: 1,
     },
     badgeText: {
-        color: COLORS.white,
+        color: '#fff',
         fontSize: 10,
         fontFamily: FONT.bold,
     },
